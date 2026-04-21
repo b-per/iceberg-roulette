@@ -3,20 +3,7 @@
 
   function initAudio(): void {
     if (sharedAudioCtx) return;
-    try {
-      sharedAudioCtx = new AudioContext();
-      console.log('[audio] created, state:', sharedAudioCtx.state, 'currentTime:', sharedAudioCtx.currentTime);
-      // Play a silent 1-sample buffer immediately to open the audio pipeline.
-      // Without this, currentTime stays at 0 and the pipeline may not be ready
-      // by the time we schedule real sounds, causing them all to play at once.
-      const silence = sharedAudioCtx.createBuffer(1, 1, sharedAudioCtx.sampleRate);
-      const primer = sharedAudioCtx.createBufferSource();
-      primer.buffer = silence;
-      primer.connect(sharedAudioCtx.destination);
-      primer.start(0);
-    } catch (e) {
-      console.error('[audio] init failed:', e);
-    }
+    try { sharedAudioCtx = new AudioContext(); } catch {}
   }
 
   if (typeof document !== 'undefined') {
@@ -47,43 +34,27 @@
   let spinning = false;
   let animating = false;
 
-  function fireTickNow(gainVal = 0.15): void {
+  function tick(gainVal = 0.5): void {
     const ctx = sharedAudioCtx;
     if (!ctx || ctx.state !== 'running') return;
-    const sr = ctx.sampleRate;
-    const len = Math.floor(sr * 0.018);
-    const buf = ctx.createBuffer(1, len, sr);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.12));
-    }
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    const gain = ctx.createGain();
-    gain.gain.value = gainVal;
-    src.connect(gain);
-    gain.connect(ctx.destination);
-    // Use ctx.currentTime + tiny offset — "play right now" regardless of what
-    // currentTime's absolute value is. Wall-clock scheduling is done by the
-    // setTimeout chain in scheduleSpinSounds.
-    src.start(ctx.currentTime + 0.005);
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.frequency.value = 1000;
+    g.gain.setValueAtTime(gainVal, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.05);
   }
 
   function scheduleSpinSounds(totalDeg: number): void {
-    const ticks = Math.round(totalDeg / SEG);
-    const wallStart = performance.now();
-    console.log('[audio] scheduling', ticks, 'ticks via wall-clock chain');
-
-    function step(i: number): void {
-      fireTickNow();
-      if (i >= ticks - 1) return;
-      const nextTargetMs = Math.pow((i + 1) / ticks, 2) * 4000;
-      const delay = Math.max(20, nextTargetMs - (performance.now() - wallStart));
-      setTimeout(() => step(i + 1), delay);
+    const n = Math.round(totalDeg / SEG);
+    for (let i = 0; i < n; i++) {
+      setTimeout(tick, Math.pow(i / n, 2) * 4000);
     }
-
-    step(0);
-    setTimeout(() => fireTickNow(0.28), Math.max(4000, 4050 - (performance.now() - wallStart)));
+    setTimeout(() => tick(0.8), 4050);
   }
 
   function toRad(deg: number): number {
@@ -119,24 +90,13 @@
     spinning = true;
     animating = true;
     let ctx = sharedAudioCtx;
-    if (!ctx) {
-      try { ctx = sharedAudioCtx = new AudioContext(); console.log('[audio] fallback create'); } catch {}
-    }
-    console.log('[audio] spin, state:', ctx?.state, 'currentTime:', ctx?.currentTime?.toFixed(3));
-    if (ctx?.state === 'suspended') {
-      console.log('[audio] resuming...');
-      await ctx.resume();
-      console.log('[audio] resumed, state:', ctx.state, 'currentTime:', ctx.currentTime.toFixed(3));
-    }
+    if (!ctx) try { ctx = sharedAudioCtx = new AudioContext(); } catch {}
+    if (ctx?.state === 'suspended') await ctx.resume();
     const idx = Math.floor(Math.random() * N);
     const newRotation = targetRotation(idx) + 5 * 360;
     const totalDeg = newRotation - rotation;
     rotation = newRotation;
-    if (ctx?.state === 'running') {
-      scheduleSpinSounds(totalDeg);
-    } else {
-      console.warn('[audio] skipping sounds, unexpected state:', ctx?.state);
-    }
+    if (ctx?.state === 'running') scheduleSpinSounds(totalDeg);
     setTimeout(() => {
       selected = ENGINES[idx];
       animating = false;
