@@ -52,17 +52,13 @@
     src.start(when);
   }
 
-  async function scheduleSpinSounds(totalDeg: number, spinStart: number): Promise<void> {
-    const ctx = await getAudioCtx();
-    if (!ctx) return;
+  function scheduleSpinSounds(ctx: AudioContext, totalDeg: number): void {
     const ticks = Math.round(totalDeg / SEG);
     for (let i = 0; i < ticks; i++) {
-      const targetMs = Math.pow(i / ticks, 2) * 4000;
-      const delay = Math.max(0, targetMs - (performance.now() - spinStart));
+      const delay = Math.pow(i / ticks, 2) * 4000;
       setTimeout(() => playTick(ctx, ctx.currentTime + 0.01), delay);
     }
-    const landingDelay = Math.max(0, 4050 - (performance.now() - spinStart));
-    setTimeout(() => playTick(ctx, ctx.currentTime + 0.01, 0.28), landingDelay);
+    setTimeout(() => playTick(ctx, ctx.currentTime + 0.01, 0.28), 4050);
   }
 
   function toRad(deg: number): number {
@@ -97,12 +93,14 @@
     if (spinning) return;
     spinning = true;
     animating = true;
+    // Warm up the AudioContext before the animation clock starts so all
+    // tick delays are measured relative to the actual animation start time.
+    const ctx = await getAudioCtx();
     const idx = Math.floor(Math.random() * N);
     const newRotation = targetRotation(idx) + 5 * 360;
     const totalDeg = newRotation - rotation;
-    const spinStart = performance.now();
-    rotation = newRotation; // start animation immediately
-    scheduleSpinSounds(totalDeg, spinStart); // async — don't await, runs alongside animation
+    rotation = newRotation;
+    if (ctx) scheduleSpinSounds(ctx, totalDeg);
     setTimeout(() => {
       selected = ENGINES[idx];
       animating = false;
