@@ -19,6 +19,8 @@
     ? (pairKey && pairOverrides[pairKey]) ?? engineCatalogRules[write]
     : null;
 
+  $: allNone = results ? CATALOGS.every(c => results![c].support === 'none') : false;
+
   let expanded: CatalogId | null = null;
   $: { write; read; expanded = null; }
 
@@ -51,6 +53,15 @@
     </div>
     {#if !read}
       <p class="read-hint">Pick a read engine above to refine results</p>
+    {/if}
+    {#if allNone}
+      <div class="no-match">
+        <span class="no-match-icon">✗</span>
+        <div>
+          <p class="no-match-title">No catalogs work for this combination</p>
+          <p class="no-match-sub">Try a different write or read engine.</p>
+        </div>
+      </div>
     {/if}
     <div class="catalog-list">
       {#each CATALOGS as catalog}
@@ -117,6 +128,38 @@
   .empty-icon { font-size: 40px; }
   .empty-title { font-size: 15px; color: #bbb; margin: 0; }
   .empty-sub { font-size: 12px; color: #888; max-width: 280px; margin: 0; line-height: 1.6; }
+
+  .no-match {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #1a0505;
+    border: 1px solid #7f1d1d;
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-family: monospace;
+  }
+
+  .no-match-icon {
+    font-size: 24px;
+    color: #ef4444;
+    flex-shrink: 0;
+    font-weight: bold;
+  }
+
+  .no-match-title {
+    color: #fca5a5;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0 0 4px;
+  }
+
+  .no-match-sub {
+    color: #f87171;
+    font-size: 11px;
+    margin: 0;
+    opacity: 0.8;
+  }
 
   .results-header {
     display: flex;

@@ -52,17 +52,17 @@
     src.start(when);
   }
 
-  async function scheduleSpinSounds(totalDeg: number): Promise<void> {
+  async function scheduleSpinSounds(totalDeg: number, spinStart: number): Promise<void> {
     const ctx = await getAudioCtx();
     if (!ctx) return;
     const ticks = Math.round(totalDeg / SEG);
-    const now = ctx.currentTime + 0.05; // 50ms buffer for scheduling safety
     for (let i = 0; i < ticks; i++) {
-      // quadratic curve: ticks cluster fast at start, spread apart at end
-      const t = Math.pow(i / ticks, 2) * 4.0;
-      playTick(ctx, now + t);
+      const targetMs = Math.pow(i / ticks, 2) * 4000;
+      const delay = Math.max(0, targetMs - (performance.now() - spinStart));
+      setTimeout(() => playTick(ctx, ctx.currentTime + 0.01), delay);
     }
-    playTick(ctx, now + 4.05, 0.28); // final landing click
+    const landingDelay = Math.max(0, 4050 - (performance.now() - spinStart));
+    setTimeout(() => playTick(ctx, ctx.currentTime + 0.01, 0.28), landingDelay);
   }
 
   function toRad(deg: number): number {
@@ -100,8 +100,9 @@
     const idx = Math.floor(Math.random() * N);
     const newRotation = targetRotation(idx) + 5 * 360;
     const totalDeg = newRotation - rotation;
+    const spinStart = performance.now();
     rotation = newRotation; // start animation immediately
-    scheduleSpinSounds(totalDeg); // async — don't await, runs alongside animation
+    scheduleSpinSounds(totalDeg, spinStart); // async — don't await, runs alongside animation
     setTimeout(() => {
       selected = ENGINES[idx];
       animating = false;
