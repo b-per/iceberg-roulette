@@ -1,12 +1,9 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { ENGINES } from '../data/compatibility';
   import type { EngineId } from '../data/compatibility';
 
   export let label: string;
   export let selected: EngineId | null = null;
-
-  const dispatch = createEventDispatcher<{ select: EngineId }>();
 
   const SIZE = 300;
   const CX = SIZE / 2;
@@ -60,7 +57,6 @@
     rotation = targetRotation(idx) + 5 * 360;
     setTimeout(() => {
       selected = ENGINES[idx];
-      dispatch('select', ENGINES[idx]);
       animating = false;
       spinning = false;
     }, 4000);
@@ -71,7 +67,6 @@
     const idx = ENGINES.indexOf(engine);
     rotation = targetRotation(idx);
     selected = engine;
-    dispatch('select', engine);
   }
 </script>
 

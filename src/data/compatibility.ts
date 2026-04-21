@@ -18,7 +18,7 @@ export interface CatalogSupport {
 
 export type EngineRule = Record<CatalogId, CatalogSupport>;
 
-export type PairKey = `${EngineId}__${EngineId}`;
+export type PairKey = `${EngineId}__${EngineId}`; // write__read order
 
 export const engineCatalogRules: Record<EngineId, EngineRule> = {
   snowflake: {

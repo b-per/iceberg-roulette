@@ -20,7 +20,7 @@
     : null;
 
   let expanded: CatalogId | null = null;
-  $: write, read, (expanded = null);
+  $: { write; read; expanded = null; }
 
   function toggle(catalog: CatalogId, support: Support): void {
     if (support === 'none') return;
