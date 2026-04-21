@@ -77,10 +77,18 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     ducklake: { support: 'none', limitations: [] },
   },
   redshift: {
-    glue:     { support: 'none', limitations: [] },
+    glue:     { support: 'partial', limitations: [
+      'Requires creating external Iceberg tables in Redshift registered in Glue Data Catalog',
+      'INSERT is supported; full UPDATE, DELETE, and MERGE support is limited',
+      'Time travel and some schema evolution features are not available via Redshift',
+    ]},
     rest:     { support: 'none', limitations: [] },
     hive:     { support: 'none', limitations: [] },
-    s3tables: { support: 'none', limitations: [] },
+    s3tables: { support: 'partial', limitations: [
+      'Requires creating external Iceberg tables in Redshift registered against S3 Tables',
+      'INSERT is supported; full UPDATE, DELETE, and MERGE support is limited',
+      'Time travel and some schema evolution features are not available via Redshift',
+    ]},
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
   },
@@ -140,19 +148,6 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
     s3tables: { support: 'partial', limitations: [
       'Databricks can read S3 Tables via the Iceberg REST catalog connector in Spark but cannot write',
       'Requires configuring the S3 Tables REST endpoint and AWS credentials in the cluster',
-    ]},
-  },
-  redshift: {
-    // Redshift Spectrum can query Glue-cataloged Iceberg tables in read-only mode.
-    glue: { support: 'partial', limitations: [
-      'Redshift Spectrum can query Glue-cataloged Iceberg tables but in read-only mode',
-      'No write, INSERT, UPDATE, or DELETE support via Redshift on Iceberg tables',
-    ]},
-    // Redshift Spectrum can read S3 Tables registered in Glue Data Catalog.
-    s3tables: { support: 'partial', limitations: [
-      'Redshift Spectrum can read S3 Tables via Glue Data Catalog integration in read-only mode',
-      'Requires registering the S3 Tables namespace in Glue Data Catalog first',
-      'No write support',
     ]},
   },
 };

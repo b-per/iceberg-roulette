@@ -103,12 +103,12 @@ describe('engineReadRules', () => {
     expect(engineReadRules.databricks?.s3tables?.support).toBe('partial');
   });
 
-  it('redshift can read from Glue via Spectrum', () => {
-    expect(engineReadRules.redshift?.glue?.support).toBe('partial');
+  it('redshift has partial write support for Glue', () => {
+    expect(engineCatalogRules.redshift.glue.support).toBe('partial');
   });
 
-  it('redshift can read from S3 Tables via Spectrum', () => {
-    expect(engineReadRules.redshift?.s3tables?.support).toBe('partial');
+  it('redshift has partial write support for S3 Tables', () => {
+    expect(engineCatalogRules.redshift.s3tables.support).toBe('partial');
   });
 });
 
