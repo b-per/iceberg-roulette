@@ -5,10 +5,10 @@
   export let label: string;
   export let selected: EngineId | null = null;
 
-  const SIZE = 300;
+  const SIZE = 360;
   const CX = SIZE / 2;
   const CY = SIZE / 2;
-  const R = 120;
+  const R = 144;
   const N = ENGINES.length;
   const SEG = 360 / N;
 
@@ -20,6 +20,48 @@
   let rotation = 0;
   let spinning = false;
   let animating = false;
+
+  let audioCtx: AudioContext | null = null;
+
+  function getAudioCtx(): AudioContext | null {
+    try {
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    } catch {
+      return null;
+    }
+  }
+
+  function playTick(ctx: AudioContext, when: number, gainVal = 0.15): void {
+    const sr = ctx.sampleRate;
+    const len = Math.floor(sr * 0.018);
+    const buf = ctx.createBuffer(1, len, sr);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.12));
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const gain = ctx.createGain();
+    gain.gain.value = gainVal;
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(when);
+  }
+
+  function scheduleSpinSounds(totalDeg: number): void {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const ticks = Math.round(totalDeg / SEG);
+    const now = ctx.currentTime;
+    for (let i = 0; i < ticks; i++) {
+      // quadratic curve: ticks cluster fast at start, spread apart at end
+      const t = Math.pow(i / ticks, 2) * 4.0;
+      playTick(ctx, now + t);
+    }
+    playTick(ctx, now + 4.05, 0.28); // final landing click
+  }
 
   function toRad(deg: number): number {
     return ((deg - 90) * Math.PI) / 180;
@@ -54,7 +96,9 @@
     spinning = true;
     animating = true;
     const idx = Math.floor(Math.random() * N);
-    rotation = targetRotation(idx) + 5 * 360;
+    const newRotation = targetRotation(idx) + 5 * 360;
+    scheduleSpinSounds(newRotation - rotation);
+    rotation = newRotation;
     setTimeout(() => {
       selected = ENGINES[idx];
       animating = false;
@@ -99,15 +143,15 @@
             text-anchor="middle"
             dominant-baseline="middle"
             fill="white"
-            font-size="9"
+            font-size="11"
             font-family="monospace"
             font-weight="bold"
           >{engine}</text>
         {/each}
-        <circle cx={CX} cy={CY} r="18" fill="#ffd700" stroke="#0a0a0a" stroke-width="2" />
-        <circle cx={CX} cy={CY} r="6" fill="#0a0a0a" />
+        <circle cx={CX} cy={CY} r="22" fill="#ffd700" stroke="#0a0a0a" stroke-width="2" />
+        <circle cx={CX} cy={CY} r="7" fill="#0a0a0a" />
       </g>
-      <circle cx={CX} cy={CY} r={R + 6} fill="none" stroke="#ffd700" stroke-width="3" />
+      <circle cx={CX} cy={CY} r={R + 7} fill="none" stroke="#ffd700" stroke-width="3" />
     </svg>
   </div>
 
@@ -162,7 +206,7 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: #888;
+    color: #aaa;
     font-family: monospace;
   }
 
@@ -213,7 +257,7 @@
   .selected-display {
     font-family: monospace;
     font-size: 13px;
-    color: #888;
+    color: #aaa;
   }
 
   .selected-name {
@@ -226,7 +270,7 @@
     flex-wrap: wrap;
     gap: 6px;
     justify-content: center;
-    max-width: 320px;
+    max-width: 380px;
   }
 
   .engine-chip {

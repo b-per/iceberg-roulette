@@ -59,7 +59,7 @@
   .tagline {
     font-family: monospace;
     font-size: 11px;
-    color: #555;
+    color: #999;
     margin: 6px 0 0;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -78,7 +78,7 @@
     display: flex;
     flex-direction: column;
     gap: 40px;
-    flex: 0 0 360px;
+    flex: 0 0 420px;
     padding-right: 32px;
   }
 
@@ -103,12 +103,12 @@
   footer a {
     font-family: monospace;
     font-size: 11px;
-    color: #444;
+    color: #777;
     text-decoration: none;
   }
 
   footer a:hover {
-    color: #888;
+    color: #bbb;
   }
 
   @media (max-width: 720px) {
