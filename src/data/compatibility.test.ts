@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { engineCatalogRules, pairOverrides, ENGINES, CATALOGS } from './compatibility';
+import type { CatalogId } from './compatibility';
 
 describe('data completeness', () => {
   it('covers all engines', () => {
@@ -68,16 +69,31 @@ describe('data quality invariants', () => {
 });
 
 describe('known facts', () => {
+  it('snowflake has full glue support via CLD', () => {
+    expect(engineCatalogRules.snowflake.glue.support).toBe('full');
+  });
+
+  it('snowflake has full unity support via CLD', () => {
+    expect(engineCatalogRules.snowflake.unity.support).toBe('full');
+  });
+
   it('databricks has full unity catalog support', () => {
     expect(engineCatalogRules.databricks.unity.support).toBe('full');
   });
 
-  it('databricks has full glue support', () => {
-    expect(engineCatalogRules.databricks.glue.support).toBe('full');
+  it('databricks cannot write iceberg to glue', () => {
+    expect(engineCatalogRules.databricks.glue.support).toBe('none');
   });
 
   it('athena has full glue support', () => {
     expect(engineCatalogRules.athena.glue.support).toBe('full');
+  });
+
+  it('trino has full support for all standard catalogs', () => {
+    const fullCatalogs: CatalogId[] = ['glue', 'rest', 'hive', 'nessie', 'unity'];
+    for (const catalog of fullCatalogs) {
+      expect(engineCatalogRules.trino[catalog].support, `trino→${catalog}`).toBe('full');
+    }
   });
 
   it('postgres has no support for any catalog', () => {
@@ -92,9 +108,9 @@ describe('known facts', () => {
     }
   });
 
-  it('duckdb+duckdb override has full ducklake support', () => {
+  it('duckdb+duckdb override has partial ducklake support', () => {
     const override = pairOverrides['duckdb__duckdb'];
     expect(override).toBeDefined();
-    expect(override?.ducklake.support).toBe('full');
+    expect(override?.ducklake.support).toBe('partial');
   });
 });
