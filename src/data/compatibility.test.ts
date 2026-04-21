@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { engineCatalogRules, pairOverrides, ENGINES, CATALOGS } from './compatibility';
+import { engineCatalogRules, engineReadRules, pairOverrides, ENGINES, CATALOGS } from './compatibility';
 import type { CatalogId } from './compatibility';
 
 describe('data completeness', () => {
@@ -65,6 +65,42 @@ describe('data quality invariants', () => {
         }
       }
     }
+  });
+});
+
+describe('engineReadRules', () => {
+  it('only references valid engine ids', () => {
+    const validEngines = new Set<string>(ENGINES);
+    for (const engine of Object.keys(engineReadRules)) {
+      expect(validEngines.has(engine), `invalid engine in engineReadRules: ${engine}`).toBe(true);
+    }
+  });
+
+  it('partial read entries have at least one limitation', () => {
+    for (const [engine, overrides] of Object.entries(engineReadRules)) {
+      if (!overrides) continue;
+      for (const [catalog, entry] of Object.entries(overrides)) {
+        if (!entry) continue;
+        if (entry.support === 'partial') {
+          expect(
+            entry.limitations.length,
+            `engineReadRules ${engine}→${catalog} is partial but has no limitations`
+          ).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it('databricks can read from REST catalogs', () => {
+    expect(engineReadRules.databricks?.rest?.support).toBe('partial');
+  });
+
+  it('databricks can read from Glue', () => {
+    expect(engineReadRules.databricks?.glue?.support).toBe('partial');
+  });
+
+  it('redshift can read from Glue via Spectrum', () => {
+    expect(engineReadRules.redshift?.glue?.support).toBe('partial');
   });
 });
 

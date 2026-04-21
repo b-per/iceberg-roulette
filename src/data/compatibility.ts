@@ -113,6 +113,32 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
   },
 };
 
+// Read-side overrides: where an engine's READ catalog capability differs from its WRITE capability.
+// Most engines: same rules both ways. Exceptions captured here.
+export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
+  databricks: {
+    // Databricks can READ from external REST catalogs (including BigLake Metastore) via Spark,
+    // even though it cannot WRITE to them.
+    rest: { support: 'partial', limitations: [
+      'Databricks can read external Iceberg REST catalogs but cannot write to them',
+      'Requires configuring the Iceberg REST catalog in Databricks cluster settings',
+    ]},
+    // Databricks can READ Glue-registered Iceberg tables via the Glue connector in Spark,
+    // even though it cannot WRITE to the Glue catalog.
+    glue: { support: 'partial', limitations: [
+      'Databricks can read Glue-registered Iceberg tables via Spark connector but cannot write to Glue',
+      'Read-only — use Unity Catalog or Hive Metastore for a read/write Databricks catalog',
+    ]},
+  },
+  redshift: {
+    // Redshift Spectrum can query Glue-cataloged Iceberg tables in read-only mode.
+    glue: { support: 'partial', limitations: [
+      'Redshift Spectrum can query Glue-cataloged Iceberg tables but in read-only mode',
+      'No write, INSERT, UPDATE, or DELETE support via Redshift on Iceberg tables',
+    ]},
+  },
+};
+
 export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
   'duckdb__duckdb': {
     glue:     { support: 'none', limitations: [] },

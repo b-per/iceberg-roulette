@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { engineCatalogRules, pairOverrides, CATALOGS } from '../data/compatibility';
+  import { engineCatalogRules, engineReadRules, pairOverrides, CATALOGS } from '../data/compatibility';
   import type { EngineId, CatalogId, Support, CatalogSupport, EngineRule } from '../data/compatibility';
 
   export let write: EngineId | null;
@@ -26,8 +26,11 @@
     const key = `${w}__${r}` as `${EngineId}__${EngineId}`;
     if (pairOverrides[key]) return pairOverrides[key]!;
     const wr = engineCatalogRules[w];
-    const rr = engineCatalogRules[r];
-    return Object.fromEntries(CATALOGS.map(c => [c, combine(wr[c], rr[c])])) as EngineRule;
+    const rrBase = engineCatalogRules[r];
+    const rrOverrides = engineReadRules[r] ?? {};
+    return Object.fromEntries(
+      CATALOGS.map(c => [c, combine(wr[c], rrOverrides[c] ?? rrBase[c])])
+    ) as EngineRule;
   }
 
   $: results = write ? computeResults(write, read ?? write) : null;
