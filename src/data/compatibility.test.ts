@@ -103,12 +103,12 @@ describe('engineReadRules', () => {
     expect(engineReadRules.databricks?.s3tables?.support).toBe('partial');
   });
 
-  it('redshift has partial write support for Glue', () => {
-    expect(engineCatalogRules.redshift.glue.support).toBe('partial');
+  it('redshift has full write support for Glue', () => {
+    expect(engineCatalogRules.redshift.glue.support).toBe('full');
   });
 
-  it('redshift has partial write support for S3 Tables', () => {
-    expect(engineCatalogRules.redshift.s3tables.support).toBe('partial');
+  it('redshift has full write support for S3 Tables', () => {
+    expect(engineCatalogRules.redshift.s3tables.support).toBe('full');
   });
 });
 
@@ -137,11 +137,23 @@ describe('known facts', () => {
     expect(engineCatalogRules.athena.s3tables.support).toBe('full');
   });
 
-  it('trino has full support for all standard catalogs', () => {
-    const fullCatalogs: CatalogId[] = ['glue', 'rest', 'hive', 's3tables', 'unity'];
+  it('trino has full support for glue, rest, hive, s3tables', () => {
+    const fullCatalogs: CatalogId[] = ['glue', 'rest', 'hive', 's3tables'];
     for (const catalog of fullCatalogs) {
       expect(engineCatalogRules.trino[catalog].support, `trino→${catalog}`).toBe('full');
     }
+  });
+
+  it('trino has partial unity support (write not GA in OSS Trino)', () => {
+    expect(engineCatalogRules.trino.unity.support).toBe('partial');
+  });
+
+  it('snowflake has full s3tables support via CLD', () => {
+    expect(engineCatalogRules.snowflake.s3tables.support).toBe('full');
+  });
+
+  it('duckdb has partial s3tables support via REST catalog', () => {
+    expect(engineCatalogRules.duckdb.s3tables.support).toBe('partial');
   });
 
   it('postgres has no support for any catalog', () => {

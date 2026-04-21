@@ -31,9 +31,8 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Quoting and case sensitivity can be inconsistent across Snowflake ↔ Iceberg REST integrations',
     ]},
     hive:     { support: 'none', limitations: [] },
-    s3tables: { support: 'partial', limitations: [
+    s3tables: { support: 'full', limitations: [
       'Requires the Snowflake Catalog-Linked Database (CLD) feature configured for the S3 Tables REST endpoint',
-      'S3 Tables uses a managed Iceberg REST API — Snowflake connects via CLD, not natively',
       'Requires appropriate AWS IAM permissions granted to Snowflake',
     ]},
     unity:    { support: 'full', limitations: [
@@ -65,29 +64,30 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
   duckdb: {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
-      'DuckDB Iceberg REST catalog integration is experimental',
-      'Write support is limited — primarily useful for reading Iceberg tables',
+      'DuckDB Iceberg REST catalog write support added in v1.4.0 — still maturing',
       'Not recommended for production write workloads',
     ]},
     hive:     { support: 'none', limitations: [] },
-    s3tables: { support: 'none', limitations: [] },
+    s3tables: { support: 'partial', limitations: [
+      'DuckDB supports S3 Tables via the Iceberg REST catalog endpoint',
+      'Write support is experimental — not recommended for production workloads',
+    ]},
     unity:    { support: 'partial', limitations: [
-      'DuckDB Unity Catalog integration is experimental and in preview',
-      'Write support is limited and not recommended for production',
+      'DuckDB connects to Unity Catalog via the Iceberg REST catalog pathway',
+      'Known issues with HTTP 500 errors on some commit operations',
+      'Not recommended for production write workloads',
     ]},
     ducklake: { support: 'none', limitations: [] },
   },
   redshift: {
-    glue:     { support: 'partial', limitations: [
-      'Requires creating external Iceberg tables in Redshift registered in Glue Data Catalog',
-      'INSERT is supported; full UPDATE, DELETE, and MERGE support is limited',
+    glue:     { support: 'full', limitations: [
+      'Requires creating Iceberg tables in Redshift registered in Glue Data Catalog',
       'Time travel and some schema evolution features are not available via Redshift',
     ]},
     rest:     { support: 'none', limitations: [] },
     hive:     { support: 'none', limitations: [] },
-    s3tables: { support: 'partial', limitations: [
-      'Requires creating external Iceberg tables in Redshift registered against S3 Tables',
-      'INSERT is supported; full UPDATE, DELETE, and MERGE support is limited',
+    s3tables: { support: 'full', limitations: [
+      'Requires creating Iceberg tables in Redshift registered against S3 Tables',
       'Time travel and some schema evolution features are not available via Redshift',
     ]},
     unity:    { support: 'none', limitations: [] },
@@ -100,7 +100,8 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     s3tables: { support: 'full', limitations: [
       'Requires configuring the S3 Tables REST catalog endpoint and AWS credentials in Trino',
     ]},
-    unity:    { support: 'full', limitations: [
+    unity:    { support: 'partial', limitations: [
+      'Trino connects to Unity Catalog via Iceberg REST, but write requires security mode adjustments and is not GA in OSS Trino',
       'Writes via Unity Catalog Iceberg REST create Managed Iceberg tables only — existing Delta tables are read-only via this interface',
     ]},
     ducklake: { support: 'none', limitations: [] },
@@ -159,14 +160,18 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
   'duckdb__duckdb': {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
-      'DuckDB REST catalog write support is experimental',
+      'DuckDB REST catalog write support added in v1.4.0 — still maturing',
       'Not recommended for production workloads',
     ]},
     hive:     { support: 'none', limitations: [] },
-    s3tables: { support: 'none', limitations: [] },
+    s3tables: { support: 'partial', limitations: [
+      'DuckDB supports S3 Tables via the Iceberg REST catalog endpoint',
+      'Write support is experimental — not recommended for production workloads',
+    ]},
     unity:    { support: 'partial', limitations: [
-      'DuckDB Unity Catalog integration is experimental and in preview',
-      'Write support is limited and not recommended for production',
+      'DuckDB connects to Unity Catalog via the Iceberg REST catalog pathway',
+      'Known issues with HTTP 500 errors on some commit operations',
+      'Not recommended for production write workloads',
     ]},
     ducklake: { support: 'partial', limitations: [
       'DuckLake stores catalog metadata in a DuckDB database file — not accessible by other engines',
