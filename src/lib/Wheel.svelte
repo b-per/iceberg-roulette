@@ -47,7 +47,9 @@
   let spinning = false;
   let animating = false;
 
-  function playTick(ctx: AudioContext, when: number, gainVal = 0.15): void {
+  function fireTickNow(gainVal = 0.15): void {
+    const ctx = sharedAudioCtx;
+    if (!ctx || ctx.state !== 'running') return;
     const sr = ctx.sampleRate;
     const len = Math.floor(sr * 0.018);
     const buf = ctx.createBuffer(1, len, sr);
@@ -61,19 +63,27 @@
     gain.gain.value = gainVal;
     src.connect(gain);
     gain.connect(ctx.destination);
-    src.start(when);
+    // Use ctx.currentTime + tiny offset — "play right now" regardless of what
+    // currentTime's absolute value is. Wall-clock scheduling is done by the
+    // setTimeout chain in scheduleSpinSounds.
+    src.start(ctx.currentTime + 0.005);
   }
 
-  function scheduleSpinSounds(ctx: AudioContext, totalDeg: number): void {
-    // Add 0.1s lookahead: even if currentTime is 0 and the pipeline just
-    // opened, sounds are guaranteed to be in the future.
-    const t0 = ctx.currentTime + 0.1;
+  function scheduleSpinSounds(totalDeg: number): void {
     const ticks = Math.round(totalDeg / SEG);
-    console.log('[audio] scheduling', ticks, 'ticks, t0:', t0.toFixed(3), 'state:', ctx.state);
-    for (let i = 0; i < ticks; i++) {
-      playTick(ctx, t0 + Math.pow(i / ticks, 2) * 4);
+    const wallStart = performance.now();
+    console.log('[audio] scheduling', ticks, 'ticks via wall-clock chain');
+
+    function step(i: number): void {
+      fireTickNow();
+      if (i >= ticks - 1) return;
+      const nextTargetMs = Math.pow((i + 1) / ticks, 2) * 4000;
+      const delay = Math.max(20, nextTargetMs - (performance.now() - wallStart));
+      setTimeout(() => step(i + 1), delay);
     }
-    playTick(ctx, t0 + 4.05, 0.28);
+
+    step(0);
+    setTimeout(() => fireTickNow(0.28), Math.max(4000, 4050 - (performance.now() - wallStart)));
   }
 
   function toRad(deg: number): number {
@@ -123,7 +133,7 @@
     const totalDeg = newRotation - rotation;
     rotation = newRotation;
     if (ctx?.state === 'running') {
-      scheduleSpinSounds(ctx, totalDeg);
+      scheduleSpinSounds(totalDeg);
     } else {
       console.warn('[audio] skipping sounds, unexpected state:', ctx?.state);
     }
