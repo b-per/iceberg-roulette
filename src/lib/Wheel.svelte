@@ -1,14 +1,16 @@
 <script context="module" lang="ts">
   let sharedAudioCtx: AudioContext | null = null;
 
-  async function getAudioCtx(): Promise<AudioContext | null> {
-    try {
-      if (!sharedAudioCtx) sharedAudioCtx = new AudioContext();
-      if (sharedAudioCtx.state === 'suspended') await sharedAudioCtx.resume();
-      return sharedAudioCtx;
-    } catch {
-      return null;
-    }
+  // Create the AudioContext synchronously in the capture phase of the first
+  // click, before any element-level handlers fire. This guarantees the
+  // context is in 'running' state by the time spin() is called.
+  function initAudio(): void {
+    if (sharedAudioCtx) return;
+    try { sharedAudioCtx = new AudioContext(); } catch {}
+  }
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('click', initAudio, { capture: true, once: true });
   }
 </script>
 
@@ -93,14 +95,18 @@
     if (spinning) return;
     spinning = true;
     animating = true;
-    // Warm up the AudioContext before the animation clock starts so all
-    // tick delays are measured relative to the actual animation start time.
-    const ctx = await getAudioCtx();
+    let ctx = sharedAudioCtx;
+    // Fallback: if initAudio somehow didn't fire yet, create now (rare).
+    if (!ctx) {
+      try { ctx = sharedAudioCtx = new AudioContext(); } catch {}
+    }
+    // Resume if suspended (e.g. browser suspended after page hide).
+    if (ctx?.state === 'suspended') await ctx.resume();
     const idx = Math.floor(Math.random() * N);
     const newRotation = targetRotation(idx) + 5 * 360;
     const totalDeg = newRotation - rotation;
     rotation = newRotation;
-    if (ctx) scheduleSpinSounds(ctx, totalDeg);
+    if (ctx?.state === 'running') scheduleSpinSounds(ctx, totalDeg);
     setTimeout(() => {
       selected = ENGINES[idx];
       animating = false;

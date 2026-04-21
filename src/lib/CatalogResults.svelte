@@ -9,7 +9,7 @@
     glue:     'AWS Glue',
     rest:     'REST / Polaris / Open Catalog',
     hive:     'Hive Metastore',
-    nessie:   'Nessie',
+    s3tables: 'AWS S3 Tables',
     unity:    'Unity Catalog',
     ducklake: 'DuckLake',
   };

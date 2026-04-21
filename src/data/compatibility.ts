@@ -5,7 +5,7 @@ export const ENGINES = [
 export type EngineId = typeof ENGINES[number];
 
 export const CATALOGS = [
-  'glue', 'rest', 'hive', 'nessie', 'unity', 'ducklake',
+  'glue', 'rest', 'hive', 's3tables', 'unity', 'ducklake',
 ] as const;
 export type CatalogId = typeof CATALOGS[number];
 
@@ -31,7 +31,11 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Quoting and case sensitivity can be inconsistent across Snowflake ↔ Iceberg REST integrations',
     ]},
     hive:     { support: 'none', limitations: [] },
-    nessie:   { support: 'none', limitations: [] },
+    s3tables: { support: 'partial', limitations: [
+      'Requires the Snowflake Catalog-Linked Database (CLD) feature configured for the S3 Tables REST endpoint',
+      'S3 Tables uses a managed Iceberg REST API — Snowflake connects via CLD, not natively',
+      'Requires appropriate AWS IAM permissions granted to Snowflake',
+    ]},
     unity:    { support: 'full', limitations: [
       'Requires the Snowflake Catalog-Linked Database (CLD) feature — must be configured per external catalog',
     ]},
@@ -45,7 +49,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Tables must be created in BigQuery first; schema is BigQuery-managed',
     ]},
     hive:     { support: 'none', limitations: [] },
-    nessie:   { support: 'none', limitations: [] },
+    s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
   },
@@ -53,10 +57,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'none', limitations: [] },
     hive:     { support: 'full', limitations: [] },
-    nessie:   { support: 'partial', limitations: [
-      'Nessie write support in Databricks requires the Spark-Nessie extension — not available via the Iceberg REST catalog protocol',
-      'Not officially supported for cross-platform production workloads via Databricks',
-    ]},
+    s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'full', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
   },
@@ -68,7 +69,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Not recommended for production write workloads',
     ]},
     hive:     { support: 'none', limitations: [] },
-    nessie:   { support: 'none', limitations: [] },
+    s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'partial', limitations: [
       'DuckDB Unity Catalog integration is experimental and in preview',
       'Write support is limited and not recommended for production',
@@ -79,7 +80,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'none', limitations: [] },
     hive:     { support: 'none', limitations: [] },
-    nessie:   { support: 'none', limitations: [] },
+    s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
   },
@@ -87,7 +88,9 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     glue:     { support: 'full', limitations: [] },
     rest:     { support: 'full', limitations: [] },
     hive:     { support: 'full', limitations: [] },
-    nessie:   { support: 'full', limitations: [] },
+    s3tables: { support: 'full', limitations: [
+      'Requires configuring the S3 Tables REST catalog endpoint and AWS credentials in Trino',
+    ]},
     unity:    { support: 'full', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
   },
@@ -99,7 +102,11 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     ]},
     rest:     { support: 'none', limitations: [] },
     hive:     { support: 'none', limitations: [] },
-    nessie:   { support: 'none', limitations: [] },
+    s3tables: { support: 'full', limitations: [
+      'Requires Athena engine version 3',
+      'S3 Tables bucket and table bucket must be in the same AWS region as the Athena workgroup',
+      'VACUUM and OPTIMIZE should be scheduled for query performance',
+    ]},
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
   },
@@ -107,7 +114,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'none', limitations: [] },
     hive:     { support: 'none', limitations: [] },
-    nessie:   { support: 'none', limitations: [] },
+    s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
   },
@@ -129,12 +136,23 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'Databricks can read Glue-registered Iceberg tables via Spark connector but cannot write to Glue',
       'Read-only — use Unity Catalog or Hive Metastore for a read/write Databricks catalog',
     ]},
+    // Databricks can READ from S3 Tables via the Iceberg REST catalog in Spark.
+    s3tables: { support: 'partial', limitations: [
+      'Databricks can read S3 Tables via the Iceberg REST catalog connector in Spark but cannot write',
+      'Requires configuring the S3 Tables REST endpoint and AWS credentials in the cluster',
+    ]},
   },
   redshift: {
     // Redshift Spectrum can query Glue-cataloged Iceberg tables in read-only mode.
     glue: { support: 'partial', limitations: [
       'Redshift Spectrum can query Glue-cataloged Iceberg tables but in read-only mode',
       'No write, INSERT, UPDATE, or DELETE support via Redshift on Iceberg tables',
+    ]},
+    // Redshift Spectrum can read S3 Tables registered in Glue Data Catalog.
+    s3tables: { support: 'partial', limitations: [
+      'Redshift Spectrum can read S3 Tables via Glue Data Catalog integration in read-only mode',
+      'Requires registering the S3 Tables namespace in Glue Data Catalog first',
+      'No write support',
     ]},
   },
 };
@@ -147,7 +165,7 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'Not recommended for production workloads',
     ]},
     hive:     { support: 'none', limitations: [] },
-    nessie:   { support: 'none', limitations: [] },
+    s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'partial', limitations: [
       'DuckDB Unity Catalog integration is experimental and in preview',
       'Write support is limited and not recommended for production',

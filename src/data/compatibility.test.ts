@@ -99,8 +99,16 @@ describe('engineReadRules', () => {
     expect(engineReadRules.databricks?.glue?.support).toBe('partial');
   });
 
+  it('databricks can read from S3 Tables', () => {
+    expect(engineReadRules.databricks?.s3tables?.support).toBe('partial');
+  });
+
   it('redshift can read from Glue via Spectrum', () => {
     expect(engineReadRules.redshift?.glue?.support).toBe('partial');
+  });
+
+  it('redshift can read from S3 Tables via Spectrum', () => {
+    expect(engineReadRules.redshift?.s3tables?.support).toBe('partial');
   });
 });
 
@@ -125,8 +133,12 @@ describe('known facts', () => {
     expect(engineCatalogRules.athena.glue.support).toBe('full');
   });
 
+  it('athena has full S3 Tables support', () => {
+    expect(engineCatalogRules.athena.s3tables.support).toBe('full');
+  });
+
   it('trino has full support for all standard catalogs', () => {
-    const fullCatalogs: CatalogId[] = ['glue', 'rest', 'hive', 'nessie', 'unity'];
+    const fullCatalogs: CatalogId[] = ['glue', 'rest', 'hive', 's3tables', 'unity'];
     for (const catalog of fullCatalogs) {
       expect(engineCatalogRules.trino[catalog].support, `trino→${catalog}`).toBe('full');
     }
@@ -142,6 +154,11 @@ describe('known facts', () => {
     for (const engine of ENGINES) {
       expect(engineCatalogRules[engine].ducklake.support).toBe('none');
     }
+  });
+
+  it('s3tables is none by default for bigquery and postgres', () => {
+    expect(engineCatalogRules.bigquery.s3tables.support).toBe('none');
+    expect(engineCatalogRules.postgres.s3tables.support).toBe('none');
   });
 
   it('duckdb+duckdb override has partial ducklake support', () => {
