@@ -1,3 +1,17 @@
+<script context="module" lang="ts">
+  let sharedAudioCtx: AudioContext | null = null;
+
+  async function getAudioCtx(): Promise<AudioContext | null> {
+    try {
+      if (!sharedAudioCtx) sharedAudioCtx = new AudioContext();
+      if (sharedAudioCtx.state === 'suspended') await sharedAudioCtx.resume();
+      return sharedAudioCtx;
+    } catch {
+      return null;
+    }
+  }
+</script>
+
 <script lang="ts">
   import { ENGINES } from '../data/compatibility';
   import type { EngineId } from '../data/compatibility';
@@ -21,18 +35,6 @@
   let spinning = false;
   let animating = false;
 
-  let audioCtx: AudioContext | null = null;
-
-  function getAudioCtx(): AudioContext | null {
-    try {
-      if (!audioCtx) audioCtx = new AudioContext();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      return audioCtx;
-    } catch {
-      return null;
-    }
-  }
-
   function playTick(ctx: AudioContext, when: number, gainVal = 0.15): void {
     const sr = ctx.sampleRate;
     const len = Math.floor(sr * 0.018);
@@ -50,11 +52,11 @@
     src.start(when);
   }
 
-  function scheduleSpinSounds(totalDeg: number): void {
-    const ctx = getAudioCtx();
+  async function scheduleSpinSounds(totalDeg: number): Promise<void> {
+    const ctx = await getAudioCtx();
     if (!ctx) return;
     const ticks = Math.round(totalDeg / SEG);
-    const now = ctx.currentTime;
+    const now = ctx.currentTime + 0.05; // 50ms buffer for scheduling safety
     for (let i = 0; i < ticks; i++) {
       // quadratic curve: ticks cluster fast at start, spread apart at end
       const t = Math.pow(i / ticks, 2) * 4.0;
@@ -91,14 +93,15 @@
     return rotation + extra;
   }
 
-  function spin(): void {
+  async function spin(): Promise<void> {
     if (spinning) return;
     spinning = true;
     animating = true;
     const idx = Math.floor(Math.random() * N);
     const newRotation = targetRotation(idx) + 5 * 360;
-    scheduleSpinSounds(newRotation - rotation);
-    rotation = newRotation;
+    const totalDeg = newRotation - rotation;
+    rotation = newRotation; // start animation immediately
+    scheduleSpinSounds(totalDeg); // async — don't await, runs alongside animation
     setTimeout(() => {
       selected = ENGINES[idx];
       animating = false;
