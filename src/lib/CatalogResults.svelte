@@ -1,6 +1,6 @@
 <script lang="ts">
   import { engineCatalogRules, pairOverrides, CATALOGS } from '../data/compatibility';
-  import type { EngineId, CatalogId, Support } from '../data/compatibility';
+  import type { EngineId, CatalogId, Support, CatalogSupport, EngineRule } from '../data/compatibility';
 
   export let write: EngineId | null;
   export let read: EngineId | null;
@@ -14,10 +14,23 @@
     ducklake: 'DuckLake',
   };
 
-  $: pairKey = write && read ? (`${write}__${read}` as `${EngineId}__${EngineId}`) : null;
-  $: results = write
-    ? (pairKey && pairOverrides[pairKey]) ?? engineCatalogRules[write]
-    : null;
+  function combine(w: CatalogSupport, r: CatalogSupport): CatalogSupport {
+    if (w.support === 'none' || r.support === 'none') return { support: 'none', limitations: [] };
+    if (w.support === 'full' && r.support === 'full') return { support: 'full', limitations: [] };
+    const seen = new Set(w.limitations);
+    const limitations = [...w.limitations, ...r.limitations.filter(l => !seen.has(l))];
+    return { support: 'partial', limitations };
+  }
+
+  function computeResults(w: EngineId, r: EngineId): EngineRule {
+    const key = `${w}__${r}` as `${EngineId}__${EngineId}`;
+    if (pairOverrides[key]) return pairOverrides[key]!;
+    const wr = engineCatalogRules[w];
+    const rr = engineCatalogRules[r];
+    return Object.fromEntries(CATALOGS.map(c => [c, combine(wr[c], rr[c])])) as EngineRule;
+  }
+
+  $: results = write ? computeResults(write, read ?? write) : null;
 
   $: allNone = results ? CATALOGS.every(c => results![c].support === 'none') : false;
 
