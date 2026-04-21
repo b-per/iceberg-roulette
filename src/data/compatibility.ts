@@ -38,6 +38,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     ]},
     unity:    { support: 'full', limitations: [
       'Requires the Snowflake Catalog-Linked Database (CLD) feature — must be configured per external catalog',
+      'Writes via Unity Catalog Iceberg REST create Managed Iceberg tables only — existing Delta tables are read-only via this interface',
     ]},
     ducklake: { support: 'none', limitations: [] },
   },
@@ -99,7 +100,9 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     s3tables: { support: 'full', limitations: [
       'Requires configuring the S3 Tables REST catalog endpoint and AWS credentials in Trino',
     ]},
-    unity:    { support: 'full', limitations: [] },
+    unity:    { support: 'full', limitations: [
+      'Writes via Unity Catalog Iceberg REST create Managed Iceberg tables only — existing Delta tables are read-only via this interface',
+    ]},
     ducklake: { support: 'none', limitations: [] },
   },
   athena: {
