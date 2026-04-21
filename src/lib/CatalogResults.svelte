@@ -20,6 +20,7 @@
     : null;
 
   let expanded: CatalogId | null = null;
+  $: write, read, (expanded = null);
 
   function toggle(catalog: CatalogId, support: Support): void {
     if (support === 'none') return;
@@ -63,8 +64,8 @@
             role="button"
             tabindex="0"
             on:click={() => toggle(catalog, support)}
-            on:keydown={(e) => e.key === 'Enter' && toggle(catalog, support)}
-            aria-pressed={expanded === catalog}
+            on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(catalog, support); } }}
+            aria-expanded={expanded === catalog}
           >
             <div class="catalog-row-main">
               <span class="catalog-name">{CATALOG_LABELS[catalog]}</span>
@@ -81,7 +82,6 @@
         {:else}
           <div
             class="catalog-row {supportClass(support)}"
-            role="listitem"
           >
             <div class="catalog-row-main">
               <span class="catalog-name">{CATALOG_LABELS[catalog]}</span>
