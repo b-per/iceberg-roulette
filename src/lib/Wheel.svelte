@@ -53,12 +53,12 @@
   }
 
   function scheduleSpinSounds(ctx: AudioContext, totalDeg: number): void {
+    const t0 = ctx.currentTime;
     const ticks = Math.round(totalDeg / SEG);
     for (let i = 0; i < ticks; i++) {
-      const delay = Math.pow(i / ticks, 2) * 4000;
-      setTimeout(() => playTick(ctx, ctx.currentTime + 0.01), delay);
+      playTick(ctx, t0 + Math.pow(i / ticks, 2) * 4);
     }
-    setTimeout(() => playTick(ctx, ctx.currentTime + 0.01, 0.28), 4050);
+    playTick(ctx, t0 + 4.05, 0.28);
   }
 
   function toRad(deg: number): number {
