@@ -1,12 +1,22 @@
 <script context="module" lang="ts">
   let sharedAudioCtx: AudioContext | null = null;
 
-  // Create the AudioContext synchronously in the capture phase of the first
-  // click, before any element-level handlers fire. This guarantees the
-  // context is in 'running' state by the time spin() is called.
   function initAudio(): void {
     if (sharedAudioCtx) return;
-    try { sharedAudioCtx = new AudioContext(); } catch {}
+    try {
+      sharedAudioCtx = new AudioContext();
+      console.log('[audio] created, state:', sharedAudioCtx.state, 'currentTime:', sharedAudioCtx.currentTime);
+      // Play a silent 1-sample buffer immediately to open the audio pipeline.
+      // Without this, currentTime stays at 0 and the pipeline may not be ready
+      // by the time we schedule real sounds, causing them all to play at once.
+      const silence = sharedAudioCtx.createBuffer(1, 1, sharedAudioCtx.sampleRate);
+      const primer = sharedAudioCtx.createBufferSource();
+      primer.buffer = silence;
+      primer.connect(sharedAudioCtx.destination);
+      primer.start(0);
+    } catch (e) {
+      console.error('[audio] init failed:', e);
+    }
   }
 
   if (typeof document !== 'undefined') {
@@ -55,8 +65,11 @@
   }
 
   function scheduleSpinSounds(ctx: AudioContext, totalDeg: number): void {
-    const t0 = ctx.currentTime;
+    // Add 0.1s lookahead: even if currentTime is 0 and the pipeline just
+    // opened, sounds are guaranteed to be in the future.
+    const t0 = ctx.currentTime + 0.1;
     const ticks = Math.round(totalDeg / SEG);
+    console.log('[audio] scheduling', ticks, 'ticks, t0:', t0.toFixed(3), 'state:', ctx.state);
     for (let i = 0; i < ticks; i++) {
       playTick(ctx, t0 + Math.pow(i / ticks, 2) * 4);
     }
@@ -96,17 +109,24 @@
     spinning = true;
     animating = true;
     let ctx = sharedAudioCtx;
-    // Fallback: if initAudio somehow didn't fire yet, create now (rare).
     if (!ctx) {
-      try { ctx = sharedAudioCtx = new AudioContext(); } catch {}
+      try { ctx = sharedAudioCtx = new AudioContext(); console.log('[audio] fallback create'); } catch {}
     }
-    // Resume if suspended (e.g. browser suspended after page hide).
-    if (ctx?.state === 'suspended') await ctx.resume();
+    console.log('[audio] spin, state:', ctx?.state, 'currentTime:', ctx?.currentTime?.toFixed(3));
+    if (ctx?.state === 'suspended') {
+      console.log('[audio] resuming...');
+      await ctx.resume();
+      console.log('[audio] resumed, state:', ctx.state, 'currentTime:', ctx.currentTime.toFixed(3));
+    }
     const idx = Math.floor(Math.random() * N);
     const newRotation = targetRotation(idx) + 5 * 360;
     const totalDeg = newRotation - rotation;
     rotation = newRotation;
-    if (ctx?.state === 'running') scheduleSpinSounds(ctx, totalDeg);
+    if (ctx?.state === 'running') {
+      scheduleSpinSounds(ctx, totalDeg);
+    } else {
+      console.warn('[audio] skipping sounds, unexpected state:', ctx?.state);
+    }
     setTimeout(() => {
       selected = ENGINES[idx];
       animating = false;
