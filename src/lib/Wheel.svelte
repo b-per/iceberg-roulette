@@ -59,10 +59,10 @@
     const idx = Math.floor(Math.random() * N);
     rotation = targetRotation(idx) + 5 * 360;
     setTimeout(() => {
-      animating = false;
-      spinning = false;
       selected = ENGINES[idx];
       dispatch('select', ENGINES[idx]);
+      animating = false;
+      spinning = false;
     }, 4000);
   }
 
@@ -116,7 +116,11 @@
     </svg>
   </div>
 
-  <button class="spin-btn" on:click={spin} disabled={spinning}>
+  <div aria-live="polite" aria-atomic="true" class="sr-only">
+    {#if selected}{label}: {selected} selected{/if}
+  </div>
+
+  <button class="spin-btn" on:click={spin} disabled={spinning} aria-label="Spin {label} wheel">
     {spinning ? 'spinning...' : '🎰 SPIN'}
   </button>
 
@@ -134,6 +138,7 @@
         style="--chip-color: {COLORS[i % COLORS.length]}"
         on:click={() => selectManual(engine)}
         disabled={spinning}
+        aria-pressed={selected === engine}
       >
         {engine}
       </button>
@@ -142,6 +147,15 @@
 </div>
 
 <style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
   .wheel-wrapper {
     display: flex;
     flex-direction: column;
