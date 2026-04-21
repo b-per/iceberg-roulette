@@ -15,16 +15,8 @@
 
   <main>
     <section class="wheels">
-      <Wheel
-        label="Write Engine"
-        bind:selected={selectedWrite}
-        on:select={(e) => (selectedWrite = e.detail)}
-      />
-      <Wheel
-        label="Read Engine"
-        bind:selected={selectedRead}
-        on:select={(e) => (selectedRead = e.detail)}
-      />
+      <Wheel label="Write Engine" bind:selected={selectedWrite} />
+      <Wheel label="Read Engine" bind:selected={selectedRead} />
     </section>
 
     <div class="divider" aria-hidden="true"></div>
@@ -35,7 +27,7 @@
   </main>
 
   <footer>
-    <a href="https://github.com/b-per/iceberg-roulette" target="_blank" rel="noopener">
+    <a href="https://github.com/b-per/iceberg-roulette" target="_blank" rel="noopener noreferrer">
       github.com/b-per/iceberg-roulette
     </a>
   </footer>
@@ -76,7 +68,6 @@
   main {
     display: flex;
     flex: 1;
-    gap: 0;
     max-width: 1100px;
     margin: 0 auto;
     width: 100%;
