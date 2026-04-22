@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { engineCatalogRules, pairOverrides, ENGINES, CATALOGS } from './compatibility';
+import { engineCatalogRules, engineReadRules, pairOverrides, ENGINES, CATALOGS } from './compatibility';
 import type { CatalogId } from './compatibility';
 
 describe('data completeness', () => {
@@ -68,6 +68,50 @@ describe('data quality invariants', () => {
   });
 });
 
+describe('engineReadRules', () => {
+  it('only references valid engine ids', () => {
+    const validEngines = new Set<string>(ENGINES);
+    for (const engine of Object.keys(engineReadRules)) {
+      expect(validEngines.has(engine), `invalid engine in engineReadRules: ${engine}`).toBe(true);
+    }
+  });
+
+  it('partial read entries have at least one limitation', () => {
+    for (const [engine, overrides] of Object.entries(engineReadRules)) {
+      if (!overrides) continue;
+      for (const [catalog, entry] of Object.entries(overrides)) {
+        if (!entry) continue;
+        if (entry.support === 'partial') {
+          expect(
+            entry.limitations.length,
+            `engineReadRules ${engine}→${catalog} is partial but has no limitations`
+          ).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it('databricks can read from REST catalogs', () => {
+    expect(engineReadRules.databricks?.rest?.support).toBe('partial');
+  });
+
+  it('databricks can read from Glue', () => {
+    expect(engineReadRules.databricks?.glue?.support).toBe('partial');
+  });
+
+  it('databricks can read from S3 Tables', () => {
+    expect(engineReadRules.databricks?.s3tables?.support).toBe('partial');
+  });
+
+  it('redshift has full write support for Glue', () => {
+    expect(engineCatalogRules.redshift.glue.support).toBe('full');
+  });
+
+  it('redshift has full write support for S3 Tables', () => {
+    expect(engineCatalogRules.redshift.s3tables.support).toBe('full');
+  });
+});
+
 describe('known facts', () => {
   it('snowflake has full glue support via CLD', () => {
     expect(engineCatalogRules.snowflake.glue.support).toBe('full');
@@ -89,11 +133,27 @@ describe('known facts', () => {
     expect(engineCatalogRules.athena.glue.support).toBe('full');
   });
 
-  it('trino has full support for all standard catalogs', () => {
-    const fullCatalogs: CatalogId[] = ['glue', 'rest', 'hive', 'nessie', 'unity'];
+  it('athena has full S3 Tables support', () => {
+    expect(engineCatalogRules.athena.s3tables.support).toBe('full');
+  });
+
+  it('trino has full support for glue, rest, hive, s3tables', () => {
+    const fullCatalogs: CatalogId[] = ['glue', 'rest', 'hive', 's3tables'];
     for (const catalog of fullCatalogs) {
       expect(engineCatalogRules.trino[catalog].support, `trino→${catalog}`).toBe('full');
     }
+  });
+
+  it('trino has partial unity support (write not GA in OSS Trino)', () => {
+    expect(engineCatalogRules.trino.unity.support).toBe('partial');
+  });
+
+  it('snowflake has full s3tables support via CLD', () => {
+    expect(engineCatalogRules.snowflake.s3tables.support).toBe('full');
+  });
+
+  it('duckdb has partial s3tables support via REST catalog', () => {
+    expect(engineCatalogRules.duckdb.s3tables.support).toBe('partial');
   });
 
   it('postgres has no support for any catalog', () => {
@@ -106,6 +166,11 @@ describe('known facts', () => {
     for (const engine of ENGINES) {
       expect(engineCatalogRules[engine].ducklake.support).toBe('none');
     }
+  });
+
+  it('s3tables is none by default for bigquery and postgres', () => {
+    expect(engineCatalogRules.bigquery.s3tables.support).toBe('none');
+    expect(engineCatalogRules.postgres.s3tables.support).toBe('none');
   });
 
   it('duckdb+duckdb override has partial ducklake support', () => {

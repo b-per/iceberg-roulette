@@ -1,17 +1,56 @@
+<script context="module" lang="ts">
+  let sharedAudioCtx: AudioContext | null = null;
+  let clickBuffer: AudioBuffer | null = null;
+
+  function initAudio(): void {
+    if (sharedAudioCtx) return;
+    try { sharedAudioCtx = new AudioContext(); } catch {}
+  }
+
+  function getClickBuffer(ctx: AudioContext): AudioBuffer {
+    if (clickBuffer) return clickBuffer;
+    const sr = ctx.sampleRate;
+    const len = Math.ceil(sr * 0.12);
+    const buf = ctx.createBuffer(1, len, sr);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const t = i / sr;
+      // White noise burst with 18ms decay — sounds like a real mechanical click
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-t / 0.018);
+    }
+    clickBuffer = buf;
+    return buf;
+  }
+
+  function tick(gainVal = 0.35): void {
+    const ctx = sharedAudioCtx;
+    if (!ctx || ctx.state !== 'running') return;
+    const buf = getClickBuffer(ctx);
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    src.buffer = buf;
+    g.gain.value = gainVal;
+    src.connect(g);
+    g.connect(ctx.destination);
+    src.start();
+  }
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('click', initAudio, { capture: true, once: true });
+  }
+</script>
+
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { ENGINES } from '../data/compatibility';
   import type { EngineId } from '../data/compatibility';
 
   export let label: string;
   export let selected: EngineId | null = null;
 
-  const dispatch = createEventDispatcher<{ select: EngineId }>();
-
-  const SIZE = 300;
+  const SIZE = 360;
   const CX = SIZE / 2;
   const CY = SIZE / 2;
-  const R = 120;
+  const R = 144;
   const N = ENGINES.length;
   const SEG = 360 / N;
 
@@ -23,6 +62,15 @@
   let rotation = 0;
   let spinning = false;
   let animating = false;
+
+  function scheduleSpinSounds(totalDeg: number): void {
+    const n = Math.round(totalDeg / SEG);
+    // Start at 100ms so the AudioContext pipeline is fully running before first tick
+    for (let i = 0; i < n; i++) {
+      setTimeout(tick, 100 + Math.pow(i / n, 2) * 3850);
+    }
+    setTimeout(() => tick(0.5), 4050);
+  }
 
   function toRad(deg: number): number {
     return ((deg - 90) * Math.PI) / 180;
@@ -52,15 +100,20 @@
     return rotation + extra;
   }
 
-  function spin(): void {
+  async function spin(): Promise<void> {
     if (spinning) return;
     spinning = true;
     animating = true;
+    let ctx = sharedAudioCtx;
+    if (!ctx) try { ctx = sharedAudioCtx = new AudioContext(); } catch {}
+    if (ctx?.state === 'suspended') await ctx.resume();
     const idx = Math.floor(Math.random() * N);
-    rotation = targetRotation(idx) + 5 * 360;
+    const newRotation = targetRotation(idx) + 5 * 360;
+    const totalDeg = newRotation - rotation;
+    rotation = newRotation;
+    if (ctx?.state === 'running') scheduleSpinSounds(totalDeg);
     setTimeout(() => {
       selected = ENGINES[idx];
-      dispatch('select', ENGINES[idx]);
       animating = false;
       spinning = false;
     }, 4000);
@@ -71,7 +124,6 @@
     const idx = ENGINES.indexOf(engine);
     rotation = targetRotation(idx);
     selected = engine;
-    dispatch('select', engine);
   }
 </script>
 
@@ -104,15 +156,15 @@
             text-anchor="middle"
             dominant-baseline="middle"
             fill="white"
-            font-size="9"
+            font-size="11"
             font-family="monospace"
             font-weight="bold"
           >{engine}</text>
         {/each}
-        <circle cx={CX} cy={CY} r="18" fill="#ffd700" stroke="#0a0a0a" stroke-width="2" />
-        <circle cx={CX} cy={CY} r="6" fill="#0a0a0a" />
+        <circle cx={CX} cy={CY} r="22" fill="#ffd700" stroke="#0a0a0a" stroke-width="2" />
+        <circle cx={CX} cy={CY} r="7" fill="#0a0a0a" />
       </g>
-      <circle cx={CX} cy={CY} r={R + 6} fill="none" stroke="#ffd700" stroke-width="3" />
+      <circle cx={CX} cy={CY} r={R + 7} fill="none" stroke="#ffd700" stroke-width="3" />
     </svg>
   </div>
 
@@ -167,7 +219,7 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: #888;
+    color: #aaa;
     font-family: monospace;
   }
 
@@ -218,7 +270,7 @@
   .selected-display {
     font-family: monospace;
     font-size: 13px;
-    color: #888;
+    color: #aaa;
   }
 
   .selected-name {
@@ -231,7 +283,7 @@
     flex-wrap: wrap;
     gap: 6px;
     justify-content: center;
-    max-width: 320px;
+    max-width: 380px;
   }
 
   .engine-chip {
