@@ -29,7 +29,7 @@ Pick a write engine and a read engine (or spin the roulette wheels). The app sho
 | Unity Catalog | Databricks Unity Catalog Iceberg REST |
 | DuckLake | DuckDB-native catalog backed by a DuckDB file |
 
-> Data reflects best-effort knowledge as of mid-2025. Verify against official docs before going to prod.
+> Data last verified against official documentation in April 2026. Verify against official docs before going to prod.
 
 ## Local development
 
