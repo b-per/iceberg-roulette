@@ -1,9 +1,38 @@
 <script context="module" lang="ts">
   let sharedAudioCtx: AudioContext | null = null;
+  let clickBuffer: AudioBuffer | null = null;
 
   function initAudio(): void {
     if (sharedAudioCtx) return;
     try { sharedAudioCtx = new AudioContext(); } catch {}
+  }
+
+  function getClickBuffer(ctx: AudioContext): AudioBuffer {
+    if (clickBuffer) return clickBuffer;
+    const sr = ctx.sampleRate;
+    const len = Math.ceil(sr * 0.12);
+    const buf = ctx.createBuffer(1, len, sr);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const t = i / sr;
+      // White noise burst with 18ms decay — sounds like a real mechanical click
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-t / 0.018);
+    }
+    clickBuffer = buf;
+    return buf;
+  }
+
+  function tick(gainVal = 0.35): void {
+    const ctx = sharedAudioCtx;
+    if (!ctx || ctx.state !== 'running') return;
+    const buf = getClickBuffer(ctx);
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    src.buffer = buf;
+    g.gain.value = gainVal;
+    src.connect(g);
+    g.connect(ctx.destination);
+    src.start();
   }
 
   if (typeof document !== 'undefined') {
@@ -34,27 +63,13 @@
   let spinning = false;
   let animating = false;
 
-  function tick(gainVal = 0.5): void {
-    const ctx = sharedAudioCtx;
-    if (!ctx || ctx.state !== 'running') return;
-    const t = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.frequency.value = 1000;
-    g.gain.setValueAtTime(gainVal, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
-    osc.connect(g);
-    g.connect(ctx.destination);
-    osc.start(t);
-    osc.stop(t + 0.05);
-  }
-
   function scheduleSpinSounds(totalDeg: number): void {
     const n = Math.round(totalDeg / SEG);
+    // Start at 100ms so the AudioContext pipeline is fully running before first tick
     for (let i = 0; i < n; i++) {
-      setTimeout(tick, Math.pow(i / n, 2) * 4000);
+      setTimeout(tick, 100 + Math.pow(i / n, 2) * 3850);
     }
-    setTimeout(() => tick(0.8), 4050);
+    setTimeout(() => tick(0.5), 4050);
   }
 
   function toRad(deg: number): number {
