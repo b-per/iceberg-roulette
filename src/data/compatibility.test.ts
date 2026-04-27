@@ -179,3 +179,38 @@ describe('known facts', () => {
     expect(override?.ducklake.support).toBe('partial');
   });
 });
+
+describe('vendor_bridge catalog', () => {
+  it('vendor_bridge is the last catalog in CATALOGS', () => {
+    expect(CATALOGS[CATALOGS.length - 1]).toBe('vendor_bridge');
+  });
+
+  it('snowflake has full write support for vendor_bridge', () => {
+    expect(engineCatalogRules.snowflake.vendor_bridge.support).toBe('full');
+  });
+
+  it('all non-snowflake engines have none write support for vendor_bridge', () => {
+    const nonSnowflake = ENGINES.filter(e => e !== 'snowflake');
+    for (const engine of nonSnowflake) {
+      expect(
+        engineCatalogRules[engine].vendor_bridge?.support,
+        `${engine} write vendor_bridge should be none`
+      ).toBe('none');
+    }
+  });
+
+  it('databricks can read vendor_bridge (Catalog Federation)', () => {
+    expect(engineReadRules.databricks?.vendor_bridge?.support).toBe('partial');
+  });
+
+  it('databricks vendor_bridge read entry has limitations', () => {
+    const limitations = engineReadRules.databricks?.vendor_bridge?.limitations ?? [];
+    expect(limitations.length).toBeGreaterThan(0);
+  });
+
+  it('databricks vendor_bridge read entry has a sourceUrl', () => {
+    const entry = engineReadRules.databricks?.vendor_bridge;
+    expect(entry?.sourceUrl).toBeDefined();
+    expect(entry?.sourceUrl?.length).toBeGreaterThan(0);
+  });
+});

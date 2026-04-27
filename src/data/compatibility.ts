@@ -5,7 +5,7 @@ export const ENGINES = [
 export type EngineId = typeof ENGINES[number];
 
 export const CATALOGS = [
-  'glue', 'rest', 'hive', 's3tables', 'unity', 'ducklake',
+  'glue', 'rest', 'hive', 's3tables', 'unity', 'ducklake', 'vendor_bridge',
 ] as const;
 export type CatalogId = typeof CATALOGS[number];
 
@@ -14,6 +14,7 @@ export type Support = 'full' | 'partial' | 'none';
 export interface CatalogSupport {
   support: Support;
   limitations: string[];
+  sourceUrl?: string;
 }
 
 export type EngineRule = Record<CatalogId, CatalogSupport>;
@@ -40,6 +41,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Writes via Unity Catalog Iceberg REST create Managed Iceberg tables only — existing Delta tables are read-only via this interface',
     ]},
     ducklake: { support: 'none', limitations: [] },
+    vendor_bridge: { support: 'full', limitations: [] },
   },
   bigquery: {
     glue:     { support: 'none', limitations: [] },
@@ -52,6 +54,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
+    vendor_bridge: { support: 'none', limitations: [] },
   },
   databricks: {
     glue:     { support: 'none', limitations: [] },
@@ -60,6 +63,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'full', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
+    vendor_bridge: { support: 'none', limitations: [] },
   },
   duckdb: {
     glue:     { support: 'none', limitations: [] },
@@ -78,6 +82,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Not recommended for production write workloads',
     ]},
     ducklake: { support: 'none', limitations: [] },
+    vendor_bridge: { support: 'none', limitations: [] },
   },
   redshift: {
     glue:     { support: 'full', limitations: [
@@ -92,6 +97,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     ]},
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
+    vendor_bridge: { support: 'none', limitations: [] },
   },
   trino: {
     glue:     { support: 'full', limitations: [] },
@@ -105,6 +111,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Writes via Unity Catalog Iceberg REST create Managed Iceberg tables only — existing Delta tables are read-only via this interface',
     ]},
     ducklake: { support: 'none', limitations: [] },
+    vendor_bridge: { support: 'none', limitations: [] },
   },
   athena: {
     glue:     { support: 'full', limitations: [
@@ -121,6 +128,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     ]},
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
+    vendor_bridge: { support: 'none', limitations: [] },
   },
   postgres: {
     glue:     { support: 'none', limitations: [] },
@@ -129,6 +137,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
+    vendor_bridge: { support: 'none', limitations: [] },
   },
 };
 
@@ -153,6 +162,13 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'Databricks can read S3 Tables via the Iceberg REST catalog connector in Spark but cannot write',
       'Requires configuring the S3 Tables REST endpoint and AWS credentials in the cluster',
     ]},
+    vendor_bridge: { support: 'partial', limitations: [
+      'Requires Snowflake Catalog Federation configured in Unity Catalog (foreign catalog)',
+      'Databricks Runtime 13.3 LTS+ or Databricks SQL 2023.40+ required',
+      'External location in Unity Catalog must cover the Snowflake table storage path',
+      'Non-Iceberg Snowflake tables permanently fall back to JDBC query federation (slower)',
+      'Tables with URI-incompatible locations or unsupported storage schemes also fall back to JDBC',
+    ], sourceUrl: 'https://docs.databricks.com/aws/en/query-federation/snowflake-catalog-federation' },
   },
 };
 
@@ -178,5 +194,6 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'Requires the ducklake extension: INSTALL ducklake; LOAD ducklake;',
       'Designed for single-engine local use cases — not suitable for cross-platform sharing',
     ]},
+    vendor_bridge: { support: 'none', limitations: [] },
   },
 };

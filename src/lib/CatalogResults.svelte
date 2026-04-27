@@ -6,12 +6,13 @@
   export let read: EngineId | null;
 
   const CATALOG_LABELS: Record<CatalogId, string> = {
-    glue:     'AWS Glue',
-    rest:     'REST / Polaris / Open Catalog',
-    hive:     'Hive Metastore',
-    s3tables: 'AWS S3 Tables',
-    unity:    'Unity Catalog',
-    ducklake: 'DuckLake',
+    glue:          'AWS Glue',
+    rest:          'REST / Polaris / Open Catalog',
+    hive:          'Hive Metastore',
+    s3tables:      'AWS S3 Tables',
+    unity:         'Unity Catalog',
+    ducklake:      'DuckLake',
+    vendor_bridge: 'Native Vendor Bridge',
   };
 
   function combine(w: CatalogSupport, r: CatalogSupport): CatalogSupport {
