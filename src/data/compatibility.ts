@@ -144,6 +144,9 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
 // Read-side overrides: where an engine's READ catalog capability differs from its WRITE capability.
 // Most engines: same rules both ways. Exceptions captured here.
 export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
+  snowflake: {
+    vendor_bridge: { support: 'none', limitations: [] },
+  },
   databricks: {
     // Databricks can READ from external REST catalogs (including BigLake Metastore) via Spark,
     // even though it cannot WRITE to them.
@@ -164,10 +167,11 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
     ]},
     vendor_bridge: { support: 'partial', limitations: [
       'Requires Snowflake Catalog Federation configured in Unity Catalog (foreign catalog)',
-      'Databricks Runtime 13.3 LTS+ or Databricks SQL 2023.40+ required',
+      'Databricks Runtime 13.3 LTS+ or Databricks SQL 2023.40+ required; DBR 16.4 LTS+ recommended for full feature support',
       'External location in Unity Catalog must cover the Snowflake table storage path',
       'Non-Iceberg Snowflake tables permanently fall back to JDBC query federation (slower)',
       'Tables with URI-incompatible locations or unsupported storage schemes also fall back to JDBC',
+      'Foreign Iceberg tables require manual metadata refresh (ALTER TABLE) to reflect Snowflake writes in Databricks',
     ], sourceUrl: 'https://docs.databricks.com/aws/en/query-federation/snowflake-catalog-federation' },
   },
 };

@@ -213,4 +213,8 @@ describe('vendor_bridge catalog', () => {
     expect(entry?.sourceUrl).toBeDefined();
     expect(entry?.sourceUrl?.length).toBeGreaterThan(0);
   });
+
+  it('snowflake cannot read vendor_bridge (not a Catalog Federation consumer)', () => {
+    expect(engineReadRules.snowflake?.vendor_bridge?.support).toBe('none');
+  });
 });
