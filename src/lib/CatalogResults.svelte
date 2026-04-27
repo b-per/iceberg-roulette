@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
   import { engineCatalogRules, engineReadRules, pairOverrides, CATALOGS } from '../data/compatibility';
   import type { EngineId, CatalogId, Support, CatalogSupport, EngineRule } from '../data/compatibility';
+
+  const dispatch = createEventDispatcher();
 
   export let write: EngineId | null;
   export let read: EngineId | null;
@@ -67,6 +70,7 @@
       <span class="engine-tag write">{write}</span>
       <span class="arrow">→</span>
       <span class="engine-tag read">{read ?? '?'}</span>
+      <button class="swap-btn" on:click={() => dispatch('swap')} title="Swap write and read engines">⇄</button>
     </div>
     {#if !read}
       <p class="read-hint">Pick a read engine above to refine results</p>
@@ -199,6 +203,21 @@
   .engine-tag.read  { background: #0d2e2e; color: #6ee7b7; border: 1px solid #0f766e; }
 
   .arrow { color: #888; }
+
+  .swap-btn {
+    background: none;
+    border: none;
+    color: #555;
+    font-family: monospace;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+    transition: color 0.15s;
+    margin-left: 4px;
+  }
+  .swap-btn:hover { color: #ccc; }
 
   .read-hint {
     font-family: monospace;

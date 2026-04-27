@@ -5,6 +5,10 @@
 
   let selectedWrite: EngineId | null = null;
   let selectedRead: EngineId | null = null;
+
+  function swapEngines() {
+    [selectedWrite, selectedRead] = [selectedRead, selectedWrite];
+  }
 </script>
 
 <div class="app">
@@ -22,7 +26,7 @@
     <div class="divider" aria-hidden="true"></div>
 
     <section class="results">
-      <CatalogResults write={selectedWrite} read={selectedRead} />
+      <CatalogResults write={selectedWrite} read={selectedRead} on:swap={swapEngines} />
     </section>
   </main>
 
