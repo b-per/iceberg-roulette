@@ -14,7 +14,7 @@ export type Support = 'full' | 'partial' | 'none';
 export interface CatalogSupport {
   support: Support;
   limitations: string[];
-  sourceUrl?: string;
+  sourceUrls?: string[];
 }
 
 export type EngineRule = Record<CatalogId, CatalogSupport>;
@@ -49,7 +49,10 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'BigQuery manages Iceberg tables via the Lakehouse runtime catalog (formerly BigLake Metastore) — a GCP-specific managed REST endpoint, not a self-hosted open catalog',
       'Read and write interoperability with external engines (Spark, Flink, Trino) is in preview as of April 2026 — not yet GA',
       'Credential vending is supported for cross-engine access control',
-    ], sourceUrl: 'https://cloud.google.com/blog/products/data-analytics/improved-interoperability-for-your-apache-iceberg-lakehouse'},
+    ], sourceUrls: [
+      'https://cloud.google.com/blog/products/data-analytics/improved-interoperability-for-your-apache-iceberg-lakehouse',
+      'https://docs.cloud.google.com/lakehouse/docs/about-lakehouse-catalogs',
+    ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'none', limitations: [] },
@@ -58,7 +61,14 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
   },
   databricks: {
     glue:     { support: 'none', limitations: [] },
-    rest:     { support: 'none', limitations: [] },
+    rest:     { support: 'partial', limitations: [
+      'Requires configuring the external REST catalog via Spark cluster/session settings — not available via native Databricks SQL',
+      'Works best with REST catalogs that support credential vending; direct cloud storage writes are constrained by Unity Catalog external locations',
+      'Not an officially documented Databricks workflow — Unity Catalog is the recommended read/write catalog for Databricks',
+    ], sourceUrls: [
+      'https://docs.databricks.com/aws/en/iceberg/',
+      'https://iceberg.apache.org/docs/latest/spark-configuration/',
+    ]},
     hive:     { support: 'full', limitations: [] },
     s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'full', limitations: [] },
@@ -151,7 +161,6 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
     // Databricks can READ from external REST catalogs (including BigLake Metastore) via Spark,
     // even though it cannot WRITE to them.
     rest: { support: 'partial', limitations: [
-      'Databricks can read external Iceberg REST catalogs but cannot write to them',
       'Requires configuring the Iceberg REST catalog in Databricks cluster settings',
     ]},
     // Databricks can READ Glue-registered Iceberg tables via the Glue connector in Spark,
@@ -172,7 +181,7 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'Non-Iceberg Snowflake tables permanently fall back to JDBC query federation (slower)',
       'Tables with URI-incompatible locations or unsupported storage schemes also fall back to JDBC',
       'Foreign Iceberg tables require manual metadata refresh (ALTER TABLE) to reflect Snowflake writes in Databricks',
-    ], sourceUrl: 'https://docs.databricks.com/aws/en/query-federation/snowflake-catalog-federation' },
+    ], sourceUrls: ['https://docs.databricks.com/aws/en/query-federation/snowflake-catalog-federation'] },
   },
 };
 

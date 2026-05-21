@@ -208,10 +208,10 @@ describe('vendor_bridge catalog', () => {
     expect(limitations.length).toBeGreaterThan(0);
   });
 
-  it('databricks vendor_bridge read entry has a sourceUrl', () => {
+  it('databricks vendor_bridge read entry has sourceUrls', () => {
     const entry = engineReadRules.databricks?.vendor_bridge;
-    expect(entry?.sourceUrl).toBeDefined();
-    expect(entry?.sourceUrl?.length).toBeGreaterThan(0);
+    expect(entry?.sourceUrls).toBeDefined();
+    expect(entry?.sourceUrls?.length).toBeGreaterThan(0);
   });
 
   it('snowflake cannot read vendor_bridge (not a Catalog Federation consumer)', () => {
