@@ -46,10 +46,10 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
   bigquery: {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
-      'BigQuery writes Iceberg tables via BigLake Metastore — a GCP-specific REST-compatible endpoint, not a general-purpose Iceberg REST catalog',
-      'Other engines can read via the BigLake Metastore REST endpoint but cannot write to BigQuery-owned tables',
-      'Tables must be created in BigQuery first; schema is BigQuery-managed',
-    ]},
+      'BigQuery manages Iceberg tables via the Lakehouse runtime catalog (formerly BigLake Metastore) — a GCP-specific managed REST endpoint, not a self-hosted open catalog',
+      'Read and write interoperability with external engines (Spark, Flink, Trino) is in preview as of April 2026 — not yet GA',
+      'Credential vending is supported for cross-engine access control',
+    ], sourceUrl: 'https://cloud.google.com/blog/products/data-analytics/improved-interoperability-for-your-apache-iceberg-lakehouse'},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'none', limitations: [] },
