@@ -91,19 +91,18 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'REST catalog write added in v1.4.0; standard SQL syntax (INSERT/UPDATE/DELETE) requires v1.4.2+',
       'UPDATE and DELETE only supported on non-partitioned, non-sorted tables',
       'Merge-on-read semantics only — no copy-on-write',
-      'Not recommended for production write workloads',
     ], sourceUrls: [
       'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
-      'DuckDB supports S3 Tables via the Iceberg REST catalog endpoint',
-      'Write support is experimental — not recommended for production workloads',
+      'DuckDB accesses S3 Tables via the Iceberg REST catalog endpoint',
+      'Same write constraints as REST: UPDATE and DELETE require non-partitioned, non-sorted tables',
     ]},
     unity:    { support: 'partial', limitations: [
       'Two pathways: uc_catalog extension (Delta tables, GA in v1.5) or Iceberg REST catalog (Iceberg-native tables)',
       'uc_catalog / Delta pathway: INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
-      'Iceberg REST pathway: known HTTP 500 errors on commit operations — not recommended for production',
+      'Iceberg REST pathway: known HTTP 500 errors on commit operations',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
       'https://github.com/duckdb/unity_catalog/issues/73',
@@ -220,14 +219,13 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'REST catalog write added in v1.4.0; standard SQL syntax (INSERT/UPDATE/DELETE) requires v1.4.2+',
       'UPDATE and DELETE only supported on non-partitioned, non-sorted tables',
       'Merge-on-read semantics only — no copy-on-write',
-      'Not recommended for production workloads',
     ], sourceUrls: [
       'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
-      'DuckDB supports S3 Tables via the Iceberg REST catalog endpoint',
-      'Write support is experimental — not recommended for production workloads',
+      'DuckDB accesses S3 Tables via the Iceberg REST catalog endpoint',
+      'Same write constraints as REST: UPDATE and DELETE require non-partitioned, non-sorted tables',
     ]},
     unity:    { support: 'partial', limitations: [
       'Two pathways: uc_catalog extension (Delta tables, GA in v1.5) or Iceberg REST catalog (Iceberg-native tables)',
