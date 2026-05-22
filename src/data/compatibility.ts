@@ -47,11 +47,13 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
       'BigQuery manages Iceberg tables via the Lakehouse runtime catalog (formerly BigLake Metastore) — a GCP-specific managed REST endpoint, not a self-hosted open catalog',
-      'Read and write interoperability with external engines (Spark, Flink, Trino) is in preview as of April 2026 — not yet GA',
+      'Cross-engine read/write interoperability (Spark, Flink, Trino, Snowflake, Databricks) is in preview as of May 2026 — not yet GA',
       'Credential vending is supported for cross-engine access control',
+      'REST catalog tables do not support views over Iceberg, metadata tables (.snapshots, .files), clustering, or table renaming',
     ], sourceUrls: [
       'https://cloud.google.com/blog/products/data-analytics/improved-interoperability-for-your-apache-iceberg-lakehouse',
       'https://docs.cloud.google.com/lakehouse/docs/about-lakehouse-catalogs',
+      'https://cloud.google.com/blog/products/data-analytics/unveiling-new-bigquery-capabilities-for-the-agentic-era',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'none', limitations: [] },
@@ -69,7 +71,9 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'https://docs.databricks.com/aws/en/iceberg/',
       'https://iceberg.apache.org/docs/latest/spark-configuration/',
     ]},
-    hive:     { support: 'full', limitations: [] },
+    hive:     { support: 'full', limitations: [
+      'Hive Metastore is deprecated — new Databricks accounts created after December 18, 2025 no longer have access; Unity Catalog is the recommended replacement',
+    ] },
     s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'full', limitations: [] },
     ducklake: { support: 'partial', limitations: [

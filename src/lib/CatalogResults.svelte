@@ -20,9 +20,9 @@
 
   function combine(w: CatalogSupport, r: CatalogSupport): CatalogSupport {
     if (w.support === 'none' || r.support === 'none') return { support: 'none', limitations: [] };
-    if (w.support === 'full' && r.support === 'full') return { support: 'full', limitations: [] };
     const seen = new Set(w.limitations);
     const limitations = [...w.limitations, ...r.limitations.filter(l => !seen.has(l))];
+    if (w.support === 'full' && r.support === 'full') return { support: 'full', limitations };
     return { support: 'partial', limitations };
   }
 
@@ -101,7 +101,10 @@
           >
             <div class="catalog-row-main">
               <span class="catalog-name">{CATALOG_LABELS[catalog]}</span>
-              <span class="support-badge {supportClass(support)}">{supportLabel(support)}</span>
+              <span class="row-right">
+                <span class="support-badge {supportClass(support)}">{supportLabel(support)}</span>
+                <span class="chevron" class:open={expanded === catalog}>›</span>
+              </span>
             </div>
             {#if expanded === catalog && entry?.limitations.length}
               <ul class="limitations">
@@ -246,6 +249,25 @@
 
   .catalog-row.expandable { cursor: pointer; }
   .catalog-row.expandable:hover { filter: brightness(1.15); }
+
+  .row-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chevron {
+    color: #555;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-block;
+    transform: rotate(0deg);
+    transition: transform 0.15s, color 0.15s;
+  }
+  .chevron.open {
+    transform: rotate(90deg);
+    color: #aaa;
+  }
 
   .catalog-row-main {
     display: flex;
