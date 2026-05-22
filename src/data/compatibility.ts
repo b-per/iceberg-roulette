@@ -72,14 +72,24 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     hive:     { support: 'full', limitations: [] },
     s3tables: { support: 'none', limitations: [] },
     unity:    { support: 'full', limitations: [] },
-    ducklake: { support: 'none', limitations: [] },
+    ducklake: { support: 'partial', limitations: [
+      'Requires the DuckLake Spark client (maintained by MotherDuck)',
+      'DuckDB-backed catalog must be served via Quack for remote access — local DuckDB file not directly accessible',
+    ], sourceUrls: [
+      'https://ducklake.select/',
+      'https://motherduck.com/blog/announcing-ducklake-1-0-on-motherduck/',
+    ]},
     vendor_bridge: { support: 'none', limitations: [] },
   },
   duckdb: {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
-      'DuckDB Iceberg REST catalog write support added in v1.4.0 — still maturing',
+      'REST catalog write added in v1.4.0; standard SQL syntax (INSERT/UPDATE/DELETE) requires v1.4.2+',
+      'UPDATE and DELETE only supported on non-partitioned, non-sorted tables',
+      'Merge-on-read semantics only — no copy-on-write',
       'Not recommended for production write workloads',
+    ], sourceUrls: [
+      'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
@@ -91,7 +101,13 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Known issues with HTTP 500 errors on some commit operations',
       'Not recommended for production write workloads',
     ]},
-    ducklake: { support: 'none', limitations: [] },
+    ducklake: { support: 'partial', limitations: [
+      'Requires the ducklake extension: INSTALL ducklake; LOAD ducklake;',
+      'Local DuckDB file catalog is single-writer; a Quack catalog server is required for concurrent or cross-engine writers',
+    ], sourceUrls: [
+      'https://ducklake.select/',
+      'https://duckdb.org/2026/05/12/quack-remote-protocol',
+    ]},
     vendor_bridge: { support: 'none', limitations: [] },
   },
   redshift: {
@@ -120,7 +136,12 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Trino connects to Unity Catalog via Iceberg REST, but write requires security mode adjustments and is not GA in OSS Trino',
       'Writes via Unity Catalog Iceberg REST create Managed Iceberg tables only — existing Delta tables are read-only via this interface',
     ]},
-    ducklake: { support: 'none', limitations: [] },
+    ducklake: { support: 'partial', limitations: [
+      'Requires a DuckLake Trino connector',
+      'DuckDB-backed catalog must be served via Quack for remote access — local DuckDB file not directly accessible',
+    ], sourceUrls: [
+      'https://ducklake.select/',
+    ]},
     vendor_bridge: { support: 'none', limitations: [] },
   },
   athena: {
@@ -189,8 +210,12 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
   'duckdb__duckdb': {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
-      'DuckDB REST catalog write support added in v1.4.0 — still maturing',
+      'REST catalog write added in v1.4.0; standard SQL syntax (INSERT/UPDATE/DELETE) requires v1.4.2+',
+      'UPDATE and DELETE only supported on non-partitioned, non-sorted tables',
+      'Merge-on-read semantics only — no copy-on-write',
       'Not recommended for production workloads',
+    ], sourceUrls: [
+      'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
@@ -203,9 +228,12 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'Not recommended for production write workloads',
     ]},
     ducklake: { support: 'partial', limitations: [
-      'DuckLake stores catalog metadata in a DuckDB database file — not accessible by other engines',
       'Requires the ducklake extension: INSTALL ducklake; LOAD ducklake;',
-      'Designed for single-engine local use cases — not suitable for cross-platform sharing',
+      'Local DuckDB file catalog is single-writer only',
+      'Concurrent multi-writer access requires a Quack catalog server (beta in v1.5, GA planned with DuckDB v2.0)',
+    ], sourceUrls: [
+      'https://ducklake.select/2026/04/13/ducklake-10/',
+      'https://duckdb.org/2026/05/12/quack-remote-protocol',
     ]},
     vendor_bridge: { support: 'none', limitations: [] },
   },

@@ -162,9 +162,16 @@ describe('known facts', () => {
     }
   });
 
-  it('ducklake is none by default for all engines', () => {
-    for (const engine of ENGINES) {
-      expect(engineCatalogRules[engine].ducklake.support).toBe('none');
+  it('ducklake is none for engines without a DuckLake client', () => {
+    const noClient = ENGINES.filter(e => !(['duckdb', 'trino', 'databricks'] as string[]).includes(e));
+    for (const engine of noClient) {
+      expect(engineCatalogRules[engine].ducklake.support, `${engine} should have no ducklake support`).toBe('none');
+    }
+  });
+
+  it('ducklake is partial for engines with a DuckLake client', () => {
+    for (const engine of ['duckdb', 'trino', 'databricks'] as const) {
+      expect(engineCatalogRules[engine].ducklake.support, `${engine} should have partial ducklake support`).toBe('partial');
     }
   });
 
