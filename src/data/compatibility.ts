@@ -100,12 +100,14 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Same write constraints as REST: UPDATE and DELETE require non-partitioned, non-sorted tables',
     ]},
     unity:    { support: 'partial', limitations: [
-      'Two pathways: uc_catalog extension (Delta tables, GA in v1.5) or Iceberg REST catalog (Iceberg-native tables)',
-      'uc_catalog / Delta pathway: INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
-      'Iceberg REST pathway: known HTTP 500 errors on commit operations',
+      'Iceberg REST write pathway is non-functional in DuckDB 1.5.3 — two open bugs block all write operations; use the uc_catalog Delta pathway instead',
+      'Iceberg REST / CTAS: fails with S3 403 — vended credentials are scoped to the metadata path only; DuckDB writes data files to a path outside the credentialed scope (duckdb-iceberg #792)',
+      'Iceberg REST / INSERT+UPDATE: fails at commit — DuckDB encodes manifest map types as Avro array-of-records instead of Iceberg JSON schema format; Unity Catalog rejects upper_bounds/lower_bounds fields (IDs 126–127); fix pending in PR #801 (duckdb-iceberg #799)',
+      'uc_catalog / Delta pathway (GA in v1.5): INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
-      'https://github.com/duckdb/unity_catalog/issues/73',
+      'https://github.com/duckdb/duckdb-iceberg/issues/792',
+      'https://github.com/duckdb/duckdb-iceberg/issues/799',
     ]},
     ducklake: { support: 'partial', limitations: [
       'Requires the ducklake extension: INSTALL ducklake; LOAD ducklake;',
@@ -228,12 +230,14 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'Same write constraints as REST: UPDATE and DELETE require non-partitioned, non-sorted tables',
     ]},
     unity:    { support: 'partial', limitations: [
-      'Two pathways: uc_catalog extension (Delta tables, GA in v1.5) or Iceberg REST catalog (Iceberg-native tables)',
-      'uc_catalog / Delta pathway: INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
-      'Iceberg REST pathway: known HTTP 500 errors on commit operations — not recommended for production',
+      'Iceberg REST write pathway is non-functional in DuckDB 1.5.3 — two open bugs block all write operations; use the uc_catalog Delta pathway instead',
+      'Iceberg REST / CTAS: fails with S3 403 — vended credentials are scoped to the metadata path only; DuckDB writes data files to a path outside the credentialed scope (duckdb-iceberg #792)',
+      'Iceberg REST / INSERT+UPDATE: fails at commit — DuckDB encodes manifest map types as Avro array-of-records instead of Iceberg JSON schema format; Unity Catalog rejects upper_bounds/lower_bounds fields (IDs 126–127); fix pending in PR #801 (duckdb-iceberg #799)',
+      'uc_catalog / Delta pathway (GA in v1.5): INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
-      'https://github.com/duckdb/unity_catalog/issues/73',
+      'https://github.com/duckdb/duckdb-iceberg/issues/792',
+      'https://github.com/duckdb/duckdb-iceberg/issues/799',
     ]},
     ducklake: { support: 'partial', limitations: [
       'Requires the ducklake extension: INSTALL ducklake; LOAD ducklake;',
