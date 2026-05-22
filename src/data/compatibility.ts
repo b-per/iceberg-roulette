@@ -101,9 +101,12 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Write support is experimental — not recommended for production workloads',
     ]},
     unity:    { support: 'partial', limitations: [
-      'DuckDB connects to Unity Catalog via the Iceberg REST catalog pathway',
-      'Known issues with HTTP 500 errors on some commit operations',
-      'Not recommended for production write workloads',
+      'Two pathways: uc_catalog extension (Delta tables, GA in v1.5) or Iceberg REST catalog (Iceberg-native tables)',
+      'uc_catalog / Delta pathway: INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
+      'Iceberg REST pathway: known HTTP 500 errors on commit operations — not recommended for production',
+    ], sourceUrls: [
+      'https://duckdb.org/2026/05/07/delta-uc-updates',
+      'https://github.com/duckdb/unity_catalog/issues/73',
     ]},
     ducklake: { support: 'partial', limitations: [
       'Requires the ducklake extension: INSTALL ducklake; LOAD ducklake;',
@@ -227,9 +230,12 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'Write support is experimental — not recommended for production workloads',
     ]},
     unity:    { support: 'partial', limitations: [
-      'DuckDB connects to Unity Catalog via the Iceberg REST catalog pathway',
-      'Known issues with HTTP 500 errors on some commit operations',
-      'Not recommended for production write workloads',
+      'Two pathways: uc_catalog extension (Delta tables, GA in v1.5) or Iceberg REST catalog (Iceberg-native tables)',
+      'uc_catalog / Delta pathway: INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
+      'Iceberg REST pathway: known HTTP 500 errors on commit operations — not recommended for production',
+    ], sourceUrls: [
+      'https://duckdb.org/2026/05/07/delta-uc-updates',
+      'https://github.com/duckdb/unity_catalog/issues/73',
     ]},
     ducklake: { support: 'partial', limitations: [
       'Requires the ducklake extension: INSTALL ducklake; LOAD ducklake;',
