@@ -1,8 +1,10 @@
 <script lang="ts">
   import Wheel from './lib/Wheel.svelte';
   import CatalogResults from './lib/CatalogResults.svelte';
+  import Matrix from './lib/Matrix.svelte';
   import type { EngineId } from './data/compatibility';
 
+  let view: 'roulette' | 'matrix' = 'roulette';
   let selectedWrite: EngineId | null = null;
   let selectedRead: EngineId | null = null;
 
@@ -15,19 +17,32 @@
   <header>
     <h1>🎰 Iceberg Roulette</h1>
     <p class="tagline">spin to discover your catalog fate</p>
+    <nav>
+      <button class="nav-btn" class:active={view === 'roulette'} on:click={() => view = 'roulette'}>
+        roulette
+      </button>
+      <span class="nav-sep">·</span>
+      <button class="nav-btn" class:active={view === 'matrix'} on:click={() => view = 'matrix'}>
+        matrix
+      </button>
+    </nav>
   </header>
 
-  <main>
-    <section class="wheels">
-      <Wheel label="Write Engine" bind:selected={selectedWrite} />
-      <Wheel label="Read Engine" bind:selected={selectedRead} />
-    </section>
+  <main class:matrix-view={view === 'matrix'}>
+    {#if view === 'roulette'}
+      <section class="wheels">
+        <Wheel label="Write Engine" bind:selected={selectedWrite} />
+        <Wheel label="Read Engine" bind:selected={selectedRead} />
+      </section>
 
-    <div class="divider" aria-hidden="true"></div>
+      <div class="divider" aria-hidden="true"></div>
 
-    <section class="results">
-      <CatalogResults write={selectedWrite} read={selectedRead} on:swap={swapEngines} />
-    </section>
+      <section class="results">
+        <CatalogResults write={selectedWrite} read={selectedRead} on:swap={swapEngines} />
+      </section>
+    {:else}
+      <Matrix />
+    {/if}
   </main>
 
   <footer>
@@ -69,6 +84,33 @@
     letter-spacing: 2px;
   }
 
+  nav {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .nav-btn {
+    background: none;
+    border: 1px solid #333;
+    color: #777;
+    font-family: monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 4px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all .12s;
+  }
+
+  .nav-btn:hover { border-color: #ffd700; color: #ffd700; }
+  .nav-btn.active { border-color: #ffd700; color: #ffd700; }
+
+  .nav-sep { color: #333; font-size: 11px; }
+
   main {
     display: flex;
     flex: 1;
@@ -76,6 +118,11 @@
     margin: 0 auto;
     width: 100%;
     padding: 32px 24px;
+  }
+
+  main.matrix-view {
+    max-width: 1400px;
+    display: block;
   }
 
   .wheels {
@@ -114,6 +161,7 @@
   footer a:hover {
     color: #bbb;
   }
+
 
   @media (max-width: 720px) {
     main {

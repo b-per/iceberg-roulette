@@ -1,22 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { engineCatalogRules, engineReadRules, pairOverrides, CATALOGS } from '../data/compatibility';
+  import { engineCatalogRules, engineReadRules, pairOverrides, CATALOGS, CATALOG_LABELS } from '../data/compatibility';
   import type { EngineId, CatalogId, Support, CatalogSupport, EngineRule } from '../data/compatibility';
 
   const dispatch = createEventDispatcher();
 
   export let write: EngineId | null;
   export let read: EngineId | null;
-
-  const CATALOG_LABELS: Record<CatalogId, string> = {
-    glue:          'AWS Glue',
-    rest:          'REST / Polaris / Open Catalog',
-    hive:          'Hive Metastore',
-    s3tables:      'AWS S3 Tables',
-    unity:         'Unity Catalog',
-    ducklake:      'DuckLake',
-    vendor_bridge: 'Native Vendor Bridge',
-  };
 
   function combine(w: CatalogSupport, r: CatalogSupport): CatalogSupport {
     if (w.support === 'none' || r.support === 'none') return { support: 'none', limitations: [] };

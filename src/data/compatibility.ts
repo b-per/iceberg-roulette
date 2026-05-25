@@ -9,6 +9,27 @@ export const CATALOGS = [
 ] as const;
 export type CatalogId = typeof CATALOGS[number];
 
+export const ENGINE_LABELS: Record<EngineId, string> = {
+  snowflake: 'Snowflake',
+  bigquery: 'BigQuery',
+  databricks: 'Databricks',
+  duckdb: 'DuckDB',
+  redshift: 'Redshift',
+  trino: 'Trino',
+  athena: 'Athena',
+  postgres: 'PostgreSQL',
+};
+
+export const CATALOG_LABELS: Record<CatalogId, string> = {
+  glue:          'AWS Glue',
+  rest:          'REST / Polaris / Open Catalog',
+  hive:          'Hive Metastore',
+  s3tables:      'AWS S3 Tables',
+  unity:         'Unity Catalog',
+  ducklake:      'DuckLake',
+  vendor_bridge: 'Native Vendor Bridge',
+};
+
 export type Support = 'full' | 'partial' | 'none';
 
 export interface CatalogSupport {
@@ -186,12 +207,21 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
   snowflake: {
     vendor_bridge: { support: 'none', limitations: [] },
   },
+  bigquery: {
+    unity: { support: 'partial', limitations: [
+      'BigQuery can read Unity Catalog managed tables via BigQuery ↔ Databricks Catalog Federation — in preview as of May 2026',
+      'Read-only from BigQuery; writing to Unity Catalog from BigQuery is not supported via this mechanism',
+      'Requires enabling the Catalog Federation integration between BigQuery and Databricks Unity Catalog',
+      'Future: catalog metadata exchange via Iceberg REST catalog planned (not yet available)',
+    ], sourceUrls: ['https://www.databricks.com/blog/interoperability-between-unity-catalog-and-google-bigquery-catalog-federation'] },
+  },
   databricks: {
-    // Databricks can READ from external REST catalogs (including BigLake Metastore) via Spark,
-    // even though it cannot WRITE to them.
+    // Databricks can READ from external REST catalogs (including BigLake Metastore and Google Cloud
+    // Lakehouse Iceberg tables) via Spark, even though it cannot WRITE to them.
     rest: { support: 'partial', limitations: [
       'Requires configuring the Iceberg REST catalog in Databricks cluster settings',
-    ]},
+      'Databricks can read Google Cloud Lakehouse (BigQuery-managed Iceberg) tables via this pathway — in private preview as of May 2026',
+    ], sourceUrls: ['https://www.databricks.com/blog/interoperability-between-unity-catalog-and-google-bigquery-catalog-federation'] },
     // Databricks can READ Glue-registered Iceberg tables via the Glue connector in Spark,
     // even though it cannot WRITE to the Glue catalog.
     glue: { support: 'partial', limitations: [
@@ -250,3 +280,47 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
     vendor_bridge: { support: 'none', limitations: [] },
   },
 };
+
+// ─── Pair-computation helpers ────────────────────────────────────────────────
+
+const SUPPORT_LEVEL: Record<Support, number> = { none: 0, partial: 1, full: 2 };
+const SUPPORT_NAME = ['none', 'partial', 'full'] as const;
+
+export function getWriteInfo(engine: EngineId, catalog: CatalogId): CatalogSupport {
+  return engineCatalogRules[engine][catalog];
+}
+
+export function getReadInfo(engine: EngineId, catalog: CatalogId): CatalogSupport {
+  return engineReadRules[engine]?.[catalog] ?? engineCatalogRules[engine][catalog];
+}
+
+export interface PairCatalogDetail {
+  combined: Support;
+  isOverride: boolean;
+  ov: CatalogSupport | null;
+  wi: CatalogSupport | null;
+  ri: CatalogSupport | null;
+}
+
+export function getPairCatalogDetail(
+  writer: EngineId, reader: EngineId, catalog: CatalogId,
+): PairCatalogDetail {
+  const key: PairKey = `${writer}__${reader}`;
+  const override = pairOverrides[key]?.[catalog];
+  if (override) {
+    return { combined: override.support, isOverride: true, ov: override, wi: null, ri: null };
+  }
+  const wi = getWriteInfo(writer, catalog);
+  const ri = getReadInfo(reader, catalog);
+  const lvl = Math.min(SUPPORT_LEVEL[wi.support], SUPPORT_LEVEL[ri.support]);
+  return { combined: SUPPORT_NAME[lvl], isOverride: false, ov: null, wi, ri };
+}
+
+export function bestPairSupport(writer: EngineId, reader: EngineId): Support {
+  let best = 0;
+  for (const catalog of CATALOGS) {
+    const { combined } = getPairCatalogDetail(writer, reader, catalog);
+    best = Math.max(best, SUPPORT_LEVEL[combined]);
+  }
+  return SUPPORT_NAME[best];
+}
