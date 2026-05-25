@@ -4,25 +4,43 @@
   import Matrix from './lib/Matrix.svelte';
   import type { EngineId } from './data/compatibility';
 
-  let view: 'roulette' | 'matrix' = 'roulette';
+  type View = 'roulette' | 'matrix';
+
+  function hashToView(hash: string): View {
+    return hash === '#matrix' ? 'matrix' : 'roulette';
+  }
+
+  let view: View = hashToView(window.location.hash);
   let selectedWrite: EngineId | null = null;
   let selectedRead: EngineId | null = null;
+
+  function setView(v: View) {
+    view = v;
+    history.pushState(null, '', v === 'roulette' ? '#roulette' : '#matrix');
+  }
 
   function swapEngines() {
     [selectedWrite, selectedRead] = [selectedRead, selectedWrite];
   }
+
+  function onHashChange() {
+    view = hashToView(window.location.hash);
+  }
+
 </script>
+
+<svelte:window on:hashchange={onHashChange} />
 
 <div class="app">
   <header>
     <h1>🎰 Iceberg Roulette</h1>
     <p class="tagline">spin to discover your catalog fate</p>
     <nav>
-      <button class="nav-btn" class:active={view === 'roulette'} on:click={() => view = 'roulette'}>
+      <button class="nav-btn" class:active={view === 'roulette'} on:click={() => setView('roulette')}>
         roulette
       </button>
       <span class="nav-sep">·</span>
-      <button class="nav-btn" class:active={view === 'matrix'} on:click={() => view = 'matrix'}>
+      <button class="nav-btn" class:active={view === 'matrix'} on:click={() => setView('matrix')}>
         matrix
       </button>
     </nav>
