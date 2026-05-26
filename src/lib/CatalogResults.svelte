@@ -81,15 +81,15 @@
         {@const hasLimitations = (entry?.limitations.length ?? 0) > 0}
         {@const isClickable = support !== 'none' && hasLimitations}
         {#if isClickable}
-          <div
-            class="catalog-row {supportClass(support)} expandable"
-            role="button"
-            tabindex="0"
-            on:click={() => toggle(catalog, support)}
-            on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(catalog, support); } }}
-            aria-expanded={expanded === catalog}
-          >
-            <div class="catalog-row-main">
+          <div class="catalog-row {supportClass(support)} expandable">
+            <div
+              class="catalog-row-main"
+              role="button"
+              tabindex="0"
+              on:click={() => toggle(catalog, support)}
+              on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(catalog, support); } }}
+              aria-expanded={expanded === catalog}
+            >
               <span class="catalog-name">{CATALOG_LABELS[catalog]}</span>
               <span class="row-right">
                 <span class="support-badge {supportClass(support)}">{supportLabel(support)}</span>
@@ -237,8 +237,8 @@
   .catalog-row.partial { background: #1f1a0d; border-color: #854d0e; }
   .catalog-row.none    { background: #111; border-color: #1e1e1e; opacity: 0.6; }
 
-  .catalog-row.expandable { cursor: pointer; }
-  .catalog-row.expandable:hover { filter: brightness(1.15); }
+  .catalog-row.expandable .catalog-row-main { cursor: pointer; }
+  .catalog-row.expandable .catalog-row-main:hover { filter: brightness(1.15); }
 
   .row-right {
     display: flex;

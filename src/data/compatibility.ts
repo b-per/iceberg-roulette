@@ -5,7 +5,7 @@ export const ENGINES = [
 export type EngineId = typeof ENGINES[number];
 
 export const CATALOGS = [
-  'glue', 'rest', 'hive', 's3tables', 'unity', 'ducklake', 'vendor_bridge',
+  'glue', 'rest', 'hive', 's3tables', 'unity', 'ducklake', 'pg_lake', 'vendor_bridge',
 ] as const;
 export type CatalogId = typeof CATALOGS[number];
 
@@ -28,6 +28,7 @@ export const CATALOG_LABELS: Record<CatalogId, string> = {
   unity:         'Unity Catalog',
   ducklake:      'DuckLake',
   vendor_bridge: 'Native Vendor Bridge',
+  pg_lake:       'pg_lake (PostgreSQL)',
 };
 
 export type Support = 'full' | 'partial' | 'none';
@@ -63,6 +64,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     ]},
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'full', limitations: [] },
+    pg_lake:  { support: 'none', limitations: [] },
   },
   bigquery: {
     glue:     { support: 'none', limitations: [] },
@@ -81,6 +83,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'none', limitations: [] },
+    pg_lake:  { support: 'none', limitations: [] },
   },
   databricks: {
     glue:     { support: 'none', limitations: [] },
@@ -105,6 +108,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'https://motherduck.com/blog/announcing-ducklake-1-0-on-motherduck/',
     ]},
     vendor_bridge: { support: 'none', limitations: [] },
+    pg_lake:  { support: 'none', limitations: [] },
   },
   duckdb: {
     glue:     { support: 'none', limitations: [] },
@@ -138,6 +142,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'https://duckdb.org/2026/05/12/quack-remote-protocol',
     ]},
     vendor_bridge: { support: 'none', limitations: [] },
+    pg_lake:  { support: 'none', limitations: [] },
   },
   redshift: {
     glue:     { support: 'full', limitations: [
@@ -153,6 +158,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'none', limitations: [] },
+    pg_lake:  { support: 'none', limitations: [] },
   },
   trino: {
     glue:     { support: 'full', limitations: [] },
@@ -172,6 +178,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'https://ducklake.select/',
     ]},
     vendor_bridge: { support: 'none', limitations: [] },
+    pg_lake:  { support: 'none', limitations: [] },
   },
   athena: {
     glue:     { support: 'full', limitations: [
@@ -189,6 +196,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'none', limitations: [] },
+    pg_lake:  { support: 'none', limitations: [] },
   },
   postgres: {
     glue:     { support: 'none', limitations: [] },
@@ -198,6 +206,12 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'none', limitations: [] },
+    pg_lake:  { support: 'partial', limitations: [
+      'Requires the pg_lake extension (Snowflake Labs, open-sourced Nov 2025)',
+      'Uses a JDBC-based SQL catalog — Iceberg metadata stored in PostgreSQL, data files in S3-compatible object storage',
+      'External engines cannot write to pg_lake-managed Iceberg tables — PostgreSQL is the sole writer',
+      'Ecosystem is still maturing; not recommended for production workloads as of May 2026',
+    ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
   },
 };
 
@@ -241,6 +255,18 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'Tables with URI-incompatible locations or unsupported storage schemes also fall back to JDBC',
       'Foreign Iceberg tables require manual metadata refresh (ALTER TABLE) to reflect Snowflake writes in Databricks',
     ], sourceUrls: ['https://docs.databricks.com/aws/en/query-federation/snowflake-catalog-federation'] },
+    pg_lake: { support: 'partial', limitations: [
+      'Databricks (Spark) can read pg_lake-managed Iceberg tables via the JDBC Iceberg catalog',
+      'Requires configuring the pg_lake JDBC catalog connector on the Spark cluster',
+      'Read-only — external engines cannot write to pg_lake-managed tables',
+    ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
+  },
+  trino: {
+    pg_lake: { support: 'partial', limitations: [
+      'Trino can read pg_lake-managed Iceberg tables via the JDBC Iceberg catalog connector',
+      'Requires configuring the pg_lake JDBC catalog in Trino',
+      'Read-only — external engines cannot write to pg_lake-managed tables',
+    ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
   },
 };
 
@@ -278,6 +304,7 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'https://duckdb.org/2026/05/12/quack-remote-protocol',
     ]},
     vendor_bridge: { support: 'none', limitations: [] },
+    pg_lake:  { support: 'none', limitations: [] },
   },
 };
 
