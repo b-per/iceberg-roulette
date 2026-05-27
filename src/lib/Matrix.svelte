@@ -364,4 +364,10 @@
   .src-links { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
   .src-link { font-size: 10px; color: #ffd700; text-decoration: none; opacity: .7; }
   .src-link:hover { opacity: 1; text-decoration: underline; }
+
+  @media (max-width: 720px) {
+    .layout { flex-direction: column; }
+    .detail-panel { width: 100%; }
+    .detail-body { max-height: none; }
+  }
 </style>
