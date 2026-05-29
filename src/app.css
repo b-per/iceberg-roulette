@@ -4,16 +4,127 @@
   padding: 0;
 }
 
+/* ─── Color tokens ────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: dark;
+
+  --bg:        #0a0a0a;
+  --bg-card:   #111111;
+  --bg-raised: #1a1a1a;
+  --border:    #1a1a1a;
+  --border-md: #222222;
+  --border-lg: #333333;
+
+  --text:   #e2e2e2;
+  --text-2: #bbbbbb;
+  --text-3: #999999;
+  --text-4: #777777;
+  --text-5: #555555;
+  --text-6: #444444;
+  --text-7: #333333;
+
+  --gold: #ffd700;
+
+  /* Status — catalog rows & support badges */
+  --row-full-bg:        #0d1f0d;
+  --row-full-border:    #166534;
+  --row-partial-bg:     #1f1a0d;
+  --row-partial-border: #854d0e;
+  --row-none-bg:        #111111;
+  --row-none-border:    #1e1e1e;
+
+  --status-full:    #4ade80;
+  --status-partial: #fbbf24;
+  --status-none:    #888888;
+
+  /* Matrix cells & badge colors */
+  --cell-full:      #14532d;
+  --cell-partial:   #78350f;
+  --cell-none:      #450a0a;
+  --cell-none-text: #f87171;
+
+  /* Engine tags */
+  --write-bg:     #1a1a2e;
+  --write-border: #7c3aed;
+  --write-text:   #a78bfa;
+  --read-bg:      #0d2e2e;
+  --read-border:  #0f766e;
+  --read-text:    #6ee7b7;
+
+  /* No-match alert */
+  --alert-bg:     #1a0505;
+  --alert-border: #7f1d1d;
+  --alert-icon:   #ef4444;
+  --alert-title:  #fca5a5;
+  --alert-sub:    #f87171;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg:        #f7f7f7;
+  --bg-card:   #ffffff;
+  --bg-raised: #eeeeee;
+  --border:    #e0e0e0;
+  --border-md: #d4d4d4;
+  --border-lg: #c0c0c0;
+
+  --text:   #111111;
+  --text-2: #333333;
+  --text-3: #666666;
+  --text-4: #888888;
+  --text-5: #aaaaaa;
+  --text-6: #bbbbbb;
+  --text-7: #cccccc;
+
+  --gold: #d4a000;
+
+  /* Status */
+  --row-full-bg:        #f0fdf4;
+  --row-full-border:    #86efac;
+  --row-partial-bg:     #fffbeb;
+  --row-partial-border: #fcd34d;
+  --row-none-bg:        #f9fafb;
+  --row-none-border:    #e5e7eb;
+
+  --status-full:    #166534;
+  --status-partial: #92400e;
+  --status-none:    #9ca3af;
+
+  /* Matrix cells */
+  --cell-full:      #bbf7d0;
+  --cell-partial:   #fde68a;
+  --cell-none:      #fecaca;
+  --cell-none-text: #991b1b;
+
+  /* Engine tags */
+  --write-bg:     #f5f3ff;
+  --write-border: #7c3aed;
+  --write-text:   #6d28d9;
+  --read-bg:      #f0fdfa;
+  --read-border:  #0f766e;
+  --read-text:    #0f766e;
+
+  /* No-match alert */
+  --alert-bg:     #fef2f2;
+  --alert-border: #fca5a5;
+  --alert-icon:   #dc2626;
+  --alert-title:  #991b1b;
+  --alert-sub:    #b91c1c;
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+
 :root {
   font-family: monospace, monospace;
   font-size: 16px;
-  color-scheme: dark;
-  background-color: #0a0a0a;
-  color: #e2e2e2;
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 body {
-  background: #0a0a0a;
+  background: var(--bg);
 }
 
 ::selection {

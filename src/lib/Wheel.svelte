@@ -147,8 +147,7 @@
           <path
             d={segmentPath(i)}
             fill={COLORS[i % COLORS.length]}
-            stroke="#0a0a0a"
-            stroke-width="2"
+            style="stroke: var(--bg); stroke-width: 2px"
           />
           <text
             x={labelPos(i).x}
@@ -161,10 +160,10 @@
             font-weight="bold"
           >{engine}</text>
         {/each}
-        <circle cx={CX} cy={CY} r="22" fill="#ffd700" stroke="#0a0a0a" stroke-width="2" />
-        <circle cx={CX} cy={CY} r="7" fill="#0a0a0a" />
+        <circle cx={CX} cy={CY} r="22" fill="#ffd700" style="stroke: var(--bg); stroke-width: 2px" />
+        <circle cx={CX} cy={CY} r="7" style="fill: var(--bg)" />
       </g>
-      <circle cx={CX} cy={CY} r={R + 7} fill="none" stroke="#ffd700" stroke-width="3" />
+      <circle cx={CX} cy={CY} r={R + 7} fill="none" style="stroke: var(--gold); stroke-width: 3px" />
     </svg>
   </div>
 
@@ -219,7 +218,7 @@
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: #aaa;
+    color: var(--text-3);
     font-family: monospace;
   }
 
@@ -233,7 +232,7 @@
     top: -10px;
     left: 50%;
     transform: translateX(-50%);
-    color: #ffd700;
+    color: var(--gold);
     font-size: 20px;
     z-index: 1;
     line-height: 1;
@@ -270,11 +269,11 @@
   .selected-display {
     font-family: monospace;
     font-size: 13px;
-    color: #aaa;
+    color: var(--text-3);
   }
 
   .selected-name {
-    color: #ffd700;
+    color: var(--gold);
     font-weight: bold;
   }
 

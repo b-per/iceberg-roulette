@@ -2,6 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);})();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Iceberg Roulette 🎰</title>
     <meta name="description" content="Spin the wheel to discover which Iceberg catalogs work for your write/read engine combo." />

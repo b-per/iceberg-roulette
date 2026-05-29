@@ -5,6 +5,7 @@
   import type { EngineId } from './data/compatibility';
 
   type View = 'roulette' | 'matrix';
+  type Theme = 'dark' | 'light';
 
   function hashToView(hash: string): View {
     return hash === '#matrix' ? 'matrix' : 'roulette';
@@ -13,6 +14,16 @@
   let view: View = hashToView(window.location.hash);
   let selectedWrite: EngineId | null = null;
   let selectedRead: EngineId | null = null;
+
+  const stored = localStorage.getItem('theme') as Theme | null;
+  let theme: Theme = stored ?? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+  function toggleTheme() {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', theme);
+  }
+
+  $: document.documentElement.setAttribute('data-theme', theme);
 
   function setView(v: View) {
     view = v;
@@ -44,6 +55,12 @@
         matrix
       </button>
     </nav>
+    <button
+      class="theme-btn"
+      on:click={toggleTheme}
+      title="Switch to {theme === 'dark' ? 'light' : 'dark'} mode"
+      aria-label="Switch to {theme === 'dark' ? 'light' : 'dark'} mode"
+    >{theme === 'dark' ? '☀' : '☾'}</button>
   </header>
 
   <main class:matrix-view={view === 'matrix'}>
@@ -75,28 +92,29 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #0a0a0a;
-    color: #e2e2e2;
+    background: var(--bg);
+    color: var(--text);
   }
 
   header {
+    position: relative;
     text-align: center;
     padding: 32px 24px 16px;
-    border-bottom: 1px solid #1a1a1a;
+    border-bottom: 1px solid var(--border);
   }
 
   h1 {
     font-family: monospace;
     font-size: 2rem;
     margin: 0;
-    color: #ffd700;
+    color: var(--gold);
     letter-spacing: 2px;
   }
 
   .tagline {
     font-family: monospace;
     font-size: 11px;
-    color: #999;
+    color: var(--text-3);
     margin: 6px 0 0;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -112,8 +130,8 @@
 
   .nav-btn {
     background: none;
-    border: 1px solid #333;
-    color: #777;
+    border: 1px solid var(--border-lg);
+    color: var(--text-4);
     font-family: monospace;
     font-size: 11px;
     text-transform: uppercase;
@@ -124,10 +142,25 @@
     transition: all .12s;
   }
 
-  .nav-btn:hover { border-color: #ffd700; color: #ffd700; }
-  .nav-btn.active { border-color: #ffd700; color: #ffd700; }
+  .nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .nav-btn.active { border-color: var(--gold); color: var(--gold); }
 
-  .nav-sep { color: #333; font-size: 11px; }
+  .theme-btn {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: none;
+    border: 1px solid var(--border-lg);
+    color: var(--text-4);
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .theme-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .nav-sep { color: var(--border-lg); font-size: 11px; }
 
   main {
     display: flex;
@@ -153,7 +186,7 @@
 
   .divider {
     width: 1px;
-    background: #1a1a1a;
+    background: var(--border);
     margin: 0 32px 0 0;
     flex-shrink: 0;
   }
@@ -166,20 +199,19 @@
   footer {
     text-align: center;
     padding: 16px;
-    border-top: 1px solid #1a1a1a;
+    border-top: 1px solid var(--border);
   }
 
   footer a {
     font-family: monospace;
     font-size: 11px;
-    color: #777;
+    color: var(--text-4);
     text-decoration: none;
   }
 
   footer a:hover {
-    color: #bbb;
+    color: var(--text-2);
   }
-
 
   @media (max-width: 720px) {
     main {
