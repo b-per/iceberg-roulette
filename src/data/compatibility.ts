@@ -113,16 +113,20 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
   duckdb: {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
-      'REST catalog write added in v1.4.0; standard SQL syntax (INSERT/UPDATE/DELETE) requires v1.4.2+',
-      'UPDATE and DELETE only supported on non-partitioned, non-sorted tables',
+      'Write support added in v1.4.0; INSERT, UPDATE, DELETE, and MERGE INTO all supported',
+      'UPDATE and DELETE only supported on non-partitioned, non-sorted tables; MERGE INTO has no such restriction',
       'Merge-on-read semantics only — no copy-on-write',
+      'ALTER TABLE schema evolution supported: column add/rename/drop, table rename, format-version upgrades (metadata-only)',
+      'Iceberg v3 supported: VARIANT and TIMESTAMP_NS types, binary deletion vectors, row lineage, column defaults',
+      'Partition transforms bucket(N, col) and truncate(W, col) supported for reads and writes',
     ], sourceUrls: [
       'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
+      'https://duckdb.org/2026/05/29/new-iceberg-features',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
       'DuckDB accesses S3 Tables via the Iceberg REST catalog endpoint',
-      'Same write constraints as REST: UPDATE and DELETE require non-partitioned, non-sorted tables',
+      'Same write constraints as REST: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
     ]},
     unity:    { support: 'partial', limitations: [
       'Iceberg REST write pathway is non-functional in DuckDB 1.5.3 — two open bugs block all write operations; use the uc_catalog Delta pathway instead',
@@ -277,16 +281,20 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
   'duckdb__duckdb': {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
-      'REST catalog write added in v1.4.0; standard SQL syntax (INSERT/UPDATE/DELETE) requires v1.4.2+',
-      'UPDATE and DELETE only supported on non-partitioned, non-sorted tables',
+      'Write support added in v1.4.0; INSERT, UPDATE, DELETE, and MERGE INTO all supported',
+      'UPDATE and DELETE only supported on non-partitioned, non-sorted tables; MERGE INTO has no such restriction',
       'Merge-on-read semantics only — no copy-on-write',
+      'ALTER TABLE schema evolution supported: column add/rename/drop, table rename, format-version upgrades (metadata-only)',
+      'Iceberg v3 supported: VARIANT and TIMESTAMP_NS types, binary deletion vectors, row lineage, column defaults',
+      'Partition transforms bucket(N, col) and truncate(W, col) supported for reads and writes',
     ], sourceUrls: [
       'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
+      'https://duckdb.org/2026/05/29/new-iceberg-features',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
       'DuckDB accesses S3 Tables via the Iceberg REST catalog endpoint',
-      'Same write constraints as REST: UPDATE and DELETE require non-partitioned, non-sorted tables',
+      'Same write constraints as REST: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
     ]},
     unity:    { support: 'partial', limitations: [
       'Iceberg REST write pathway is non-functional in DuckDB 1.5.3 — two open bugs block all write operations; use the uc_catalog Delta pathway instead',
