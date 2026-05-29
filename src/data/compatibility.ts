@@ -268,6 +268,44 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'Read-only — external engines cannot write to pg_lake-managed tables',
     ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
   },
+  snowflake: {
+    // Snowflake write rules include a CTAS-specific caveat; reading Glue tables only needs CLD.
+    glue: { support: 'full', limitations: [
+      'Requires the Snowflake Catalog-Linked Database (CLD) feature configured for the Glue catalog',
+      'Quoting and case sensitivity can be inconsistent between Snowflake and Iceberg',
+    ] },
+  },
+  redshift: {
+    // Write rules say "requires creating tables in Redshift" — for reads the tables just need to be
+    // registered as external schemas; no creation required on the Redshift side.
+    glue: { support: 'full', limitations: [
+      'Iceberg tables must be registered in Redshift as an external schema pointing to the Glue Data Catalog',
+      'Time travel and some schema evolution features are not available via Redshift',
+    ] },
+    s3tables: { support: 'full', limitations: [
+      'Iceberg tables must be registered in Redshift as an external schema pointing to S3 Tables',
+      'Time travel and some schema evolution features are not available via Redshift',
+    ] },
+  },
+  trino: {
+    // Write rules include a Unity write-specific caveat; Trino reads Unity via Iceberg REST cleanly.
+    unity: { support: 'full', limitations: [
+      'Existing Delta tables in Unity Catalog are accessible as read-only Iceberg tables via the REST interface',
+    ] },
+  },
+  duckdb: {
+    // DuckDB's write rules carry write-specific bugs and caveats. Reading is a different story:
+    // the Iceberg extension reads from REST catalogs reliably; the write bugs do not affect reads.
+    rest: { support: 'full', limitations: [] },
+    s3tables: { support: 'partial', limitations: [
+      'DuckDB reads S3 Tables via the Iceberg REST catalog endpoint',
+      'Requires the duckdb-iceberg extension and S3 credentials configured as DuckDB secrets',
+    ] },
+    unity: { support: 'partial', limitations: [
+      'DuckDB can read Unity Catalog Iceberg tables via the REST catalog extension — write bugs (#792, #799) do not affect reads',
+      'Delta tables can also be read via the uc_catalog pathway',
+    ], sourceUrls: ['https://duckdb.org/2026/05/07/delta-uc-updates'] },
+  },
   trino: {
     pg_lake: { support: 'partial', limitations: [
       'Trino can read pg_lake-managed Iceberg tables via the JDBC Iceberg catalog connector',
