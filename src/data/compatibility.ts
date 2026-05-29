@@ -234,8 +234,11 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
     // Lakehouse Iceberg tables) via Spark, even though it cannot WRITE to them.
     rest: { support: 'partial', limitations: [
       'Requires configuring the Iceberg REST catalog in Databricks cluster settings',
-      'Databricks can read Google Cloud Lakehouse (BigQuery-managed Iceberg) tables via this pathway — in private preview as of May 2026',
-    ], sourceUrls: ['https://www.databricks.com/blog/interoperability-between-unity-catalog-and-google-bigquery-catalog-federation'] },
+      'Databricks can read Google Cloud Lakehouse (BigQuery-managed Iceberg) tables via this pathway — in public preview as of May 2026',
+    ], sourceUrls: [
+      'https://www.databricks.com/blog/interoperability-between-unity-catalog-and-google-bigquery-catalog-federation',
+      'https://www.databricks.com/blog/unity-catalog-and-next-era-apache-icebergtm',
+    ] },
     // Databricks can READ Glue-registered Iceberg tables via the Glue connector in Spark,
     // even though it cannot WRITE to the Glue catalog.
     glue: { support: 'partial', limitations: [
