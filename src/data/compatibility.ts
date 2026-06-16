@@ -129,9 +129,8 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Same write constraints as REST: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
     ]},
     unity:    { support: 'partial', limitations: [
-      'Iceberg REST write pathway is non-functional in DuckDB 1.5.3 — two open bugs block all write operations; use the uc_catalog Delta pathway instead',
-      'Iceberg REST / CTAS: fails with S3 403 — vended credentials are scoped to the metadata path only; DuckDB writes data files to a path outside the credentialed scope (duckdb-iceberg #792)',
-      'Iceberg REST / INSERT+UPDATE: fails at commit — DuckDB encodes manifest map types as Avro array-of-records instead of Iceberg JSON schema format; Unity Catalog rejects upper_bounds/lower_bounds fields (IDs 126–127); fix pending in PR #801 (duckdb-iceberg #799)',
+      'Iceberg REST write bugs (#792 credential scope, #799 Avro encoding) both fixed in duckdb-iceberg on May 30–31 2026 — pending the next stable DuckDB release (post-1.5.3)',
+      'On DuckDB 1.5.3 (current stable), Iceberg REST writes remain broken — use the uc_catalog Delta pathway as a workaround in the meantime',
       'uc_catalog / Delta pathway (GA in v1.5): INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
@@ -214,7 +213,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Requires the pg_lake extension (Snowflake Labs, open-sourced Nov 2025)',
       'Uses a JDBC-based SQL catalog — Iceberg metadata stored in PostgreSQL, data files in S3-compatible object storage',
       'External engines cannot write to pg_lake-managed Iceberg tables — PostgreSQL is the sole writer',
-      'Ecosystem is still maturing; not recommended for production workloads as of May 2026',
+      'Maturing rapidly — weekly releases since open-source launch (v3.3.x as of May 2026 adds production-hardening, PG18 support, isolation testing); verify stability for your use case',
     ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
   },
 };
@@ -335,9 +334,8 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'Same write constraints as REST: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
     ]},
     unity:    { support: 'partial', limitations: [
-      'Iceberg REST write pathway is non-functional in DuckDB 1.5.3 — two open bugs block all write operations; use the uc_catalog Delta pathway instead',
-      'Iceberg REST / CTAS: fails with S3 403 — vended credentials are scoped to the metadata path only; DuckDB writes data files to a path outside the credentialed scope (duckdb-iceberg #792)',
-      'Iceberg REST / INSERT+UPDATE: fails at commit — DuckDB encodes manifest map types as Avro array-of-records instead of Iceberg JSON schema format; Unity Catalog rejects upper_bounds/lower_bounds fields (IDs 126–127); fix pending in PR #801 (duckdb-iceberg #799)',
+      'Iceberg REST write bugs (#792 credential scope, #799 Avro encoding) both fixed in duckdb-iceberg on May 30–31 2026 — pending the next stable DuckDB release (post-1.5.3)',
+      'On DuckDB 1.5.3 (current stable), Iceberg REST writes remain broken — use the uc_catalog Delta pathway as a workaround in the meantime',
       'uc_catalog / Delta pathway (GA in v1.5): INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
