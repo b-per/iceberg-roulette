@@ -46,6 +46,14 @@
   function supportLabel(s: Support): string {
     return s === 'full' ? '✓ full' : s === 'partial' ? '⚠ partial' : '✗';
   }
+
+  function issueUrl(w: EngineId | null, r: EngineId | null): string {
+    const title = w ? `Data inaccuracy: ${w} → ${r ?? '?'}` : 'Data inaccuracy';
+    const body = w
+      ? `**Write engine:** ${w}\n**Read engine:** ${r ?? 'not selected'}\n\n**What is inaccurate:**\n`
+      : `**What is inaccurate:**\n`;
+    return `https://github.com/b-per/iceberg-roulette/issues/new?labels=data-accuracy&title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+  }
 </script>
 
 <div class="results-panel">
@@ -116,7 +124,10 @@
         {/if}
       {/each}
     </div>
-    <p class="disclaimer">Data reflects best-effort knowledge — verify against official docs before going to prod.</p>
+    <div class="footer-row">
+      <p class="disclaimer">Data reflects best-effort knowledge — verify against official docs before going to prod.</p>
+      <a class="report-link" href={issueUrl(write, read)} target="_blank" rel="noopener noreferrer">⚑ report inaccuracy</a>
+    </div>
   {/if}
 </div>
 
@@ -281,10 +292,29 @@
     line-height: 1.8;
   }
 
+  .footer-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 4px 0 0;
+  }
+
   .disclaimer {
     font-family: monospace;
     font-size: 10px;
     color: var(--text-4);
-    margin: 4px 0 0;
+    margin: 0;
   }
+
+  .report-link {
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--text-5);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s;
+  }
+  .report-link:hover { color: var(--text-2); }
 </style>

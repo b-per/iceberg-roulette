@@ -220,6 +220,12 @@
               {/if}
             </div>
           {/each}
+          <a
+            class="report-link"
+            href="https://github.com/b-per/iceberg-roulette/issues/new?labels=data-accuracy&title={encodeURIComponent(`Data inaccuracy: ${ENGINE_LABELS[selectedCell.writer]} → ${ENGINE_LABELS[selectedCell.reader]}`)}&body={encodeURIComponent(`**Write engine:** ${selectedCell.writer}\n**Read engine:** ${selectedCell.reader}\n\n**What is inaccurate:**\n`)}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >⚑ report inaccuracy</a>
         </div>
       </div>
     {/if}
@@ -364,6 +370,19 @@
   .src-links { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
   .src-link { font-size: 10px; color: var(--gold); text-decoration: none; opacity: .7; }
   .src-link:hover { opacity: 1; text-decoration: underline; }
+
+  .report-link {
+    display: block;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    font-family: monospace;
+    color: var(--text-5);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .report-link:hover { color: var(--text-2); }
 
   @media (max-width: 720px) {
     .layout { flex-direction: column; }
