@@ -129,8 +129,8 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Same write constraints as REST: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
     ]},
     unity:    { support: 'partial', limitations: [
-      'Iceberg REST write bugs (#792 credential scope, #799 Avro encoding) both fixed in duckdb-iceberg on May 30–31 2026 — pending the next stable DuckDB release (post-1.5.3)',
-      'On DuckDB 1.5.3 (current stable), Iceberg REST writes remain broken — use the uc_catalog Delta pathway as a workaround in the meantime',
+      'Iceberg REST write bugs (#792 credential scope, #799 Avro encoding) fixed in DuckDB 1.5.4 (June 2026)',
+      'Iceberg REST writes via Unity Catalog: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
       'uc_catalog / Delta pathway (GA in v1.5): INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
@@ -300,10 +300,10 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'DuckDB reads S3 Tables via the Iceberg REST catalog endpoint',
       'Requires the duckdb-iceberg extension and S3 credentials configured as DuckDB secrets',
     ] },
-    unity: { support: 'partial', limitations: [
-      'DuckDB can read Unity Catalog Iceberg tables via the REST catalog extension — write bugs (#792, #799) do not affect reads',
+    unity: { support: 'full', limitations: [
+      'Iceberg tables are accessed via the REST catalog extension',
       'Delta tables can also be read via the uc_catalog pathway',
-    ], sourceUrls: ['https://duckdb.org/2026/05/07/delta-uc-updates'] },
+    ] },
   },
   trino: {
     pg_lake: { support: 'partial', limitations: [
@@ -334,8 +334,8 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'Same write constraints as REST: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
     ]},
     unity:    { support: 'partial', limitations: [
-      'Iceberg REST write bugs (#792 credential scope, #799 Avro encoding) both fixed in duckdb-iceberg on May 30–31 2026 — pending the next stable DuckDB release (post-1.5.3)',
-      'On DuckDB 1.5.3 (current stable), Iceberg REST writes remain broken — use the uc_catalog Delta pathway as a workaround in the meantime',
+      'Iceberg REST write bugs (#792 credential scope, #799 Avro encoding) fixed in DuckDB 1.5.4 (June 2026)',
+      'Iceberg REST writes via Unity Catalog: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
       'uc_catalog / Delta pathway (GA in v1.5): INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
