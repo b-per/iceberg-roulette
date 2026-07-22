@@ -73,10 +73,12 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Cross-engine read/write interoperability (Spark, Flink, Trino, Snowflake, Databricks) is in preview as of May 2026 — not yet GA',
       'Credential vending is supported for cross-engine access control',
       'REST catalog tables do not support views over Iceberg, metadata tables (.snapshots, .files), clustering, or table renaming',
+      'Google explicitly warns against writing to REST-catalog-endpoint tables via BigQuery DDL/DML once other Iceberg engines (Spark, Flink, Trino, DuckDB) are writing to them — mixed writers risk incompatible metadata changes',
     ], sourceUrls: [
       'https://cloud.google.com/blog/products/data-analytics/improved-interoperability-for-your-apache-iceberg-lakehouse',
       'https://docs.cloud.google.com/lakehouse/docs/about-lakehouse-catalogs',
       'https://cloud.google.com/blog/products/data-analytics/unveiling-new-bigquery-capabilities-for-the-agentic-era',
+      'https://docs.cloud.google.com/lakehouse/docs/set-up-lakehouse-iceberg-rest-catalog',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'none', limitations: [] },
@@ -119,9 +121,11 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'ALTER TABLE schema evolution supported: column add/rename/drop, table rename, format-version upgrades (metadata-only)',
       'Iceberg v3 supported: VARIANT and TIMESTAMP_NS types, binary deletion vectors, row lineage, column defaults',
       'Partition transforms bucket(N, col) and truncate(W, col) supported for reads and writes',
+      'DuckDB docs list Google Cloud BigLake (the Lakehouse runtime catalog) as a supported REST catalog target via ATTACH; GCP access tokens expire after 1 hour and must be refreshed manually for long-running sessions',
     ], sourceUrls: [
       'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
       'https://duckdb.org/2026/05/29/new-iceberg-features',
+      'https://duckdb.org/docs/current/core_extensions/iceberg/iceberg_rest_catalogs',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
@@ -223,6 +227,11 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
 export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
   snowflake: {
     vendor_bridge: { support: 'none', limitations: [] },
+    // Snowflake write rules include a CTAS-specific caveat; reading Glue tables only needs CLD.
+    glue: { support: 'full', limitations: [
+      'Requires the Snowflake Catalog-Linked Database (CLD) feature configured for the Glue catalog',
+      'Quoting and case sensitivity can be inconsistent between Snowflake and Iceberg',
+    ] },
   },
   bigquery: {
     unity: { support: 'partial', limitations: [
@@ -267,13 +276,6 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'Read-only — external engines cannot write to pg_lake-managed tables',
     ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
   },
-  snowflake: {
-    // Snowflake write rules include a CTAS-specific caveat; reading Glue tables only needs CLD.
-    glue: { support: 'full', limitations: [
-      'Requires the Snowflake Catalog-Linked Database (CLD) feature configured for the Glue catalog',
-      'Quoting and case sensitivity can be inconsistent between Snowflake and Iceberg',
-    ] },
-  },
   redshift: {
     // Write rules say "requires creating tables in Redshift" — for reads the tables just need to be
     // registered as external schemas; no creation required on the Redshift side.
@@ -291,6 +293,11 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
     unity: { support: 'full', limitations: [
       'Existing Delta tables in Unity Catalog are accessible as read-only Iceberg tables via the REST interface',
     ] },
+    pg_lake: { support: 'partial', limitations: [
+      'Trino can read pg_lake-managed Iceberg tables via the JDBC Iceberg catalog connector',
+      'Requires configuring the pg_lake JDBC catalog in Trino',
+      'Read-only — external engines cannot write to pg_lake-managed tables',
+    ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
   },
   duckdb: {
     // DuckDB's write rules carry write-specific bugs and caveats. Reading is a different story:
@@ -305,13 +312,6 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'Delta tables can also be read via the uc_catalog pathway',
     ] },
   },
-  trino: {
-    pg_lake: { support: 'partial', limitations: [
-      'Trino can read pg_lake-managed Iceberg tables via the JDBC Iceberg catalog connector',
-      'Requires configuring the pg_lake JDBC catalog in Trino',
-      'Read-only — external engines cannot write to pg_lake-managed tables',
-    ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
-  },
 };
 
 export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
@@ -324,9 +324,11 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'ALTER TABLE schema evolution supported: column add/rename/drop, table rename, format-version upgrades (metadata-only)',
       'Iceberg v3 supported: VARIANT and TIMESTAMP_NS types, binary deletion vectors, row lineage, column defaults',
       'Partition transforms bucket(N, col) and truncate(W, col) supported for reads and writes',
+      'DuckDB docs list Google Cloud BigLake (the Lakehouse runtime catalog) as a supported REST catalog target via ATTACH; GCP access tokens expire after 1 hour and must be refreshed manually for long-running sessions',
     ], sourceUrls: [
       'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
       'https://duckdb.org/2026/05/29/new-iceberg-features',
+      'https://duckdb.org/docs/current/core_extensions/iceberg/iceberg_rest_catalogs',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
