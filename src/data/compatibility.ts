@@ -125,12 +125,10 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Iceberg v3 supported: VARIANT and TIMESTAMP_NS types, binary deletion vectors, row lineage, column defaults',
       'Partition transforms bucket(N, col) and truncate(W, col) supported for reads and writes',
       'DuckDB docs list Google Cloud BigLake (the Lakehouse runtime catalog) as a supported REST catalog target via ATTACH; GCP access tokens expire after 1 hour and must be refreshed manually for long-running sessions',
-      'Verified bug: tables written by duckdb-iceberg encode primitive Avro field types wrapped in a redundant nested object (e.g. `"type": {"type": "int"}`) instead of the canonical bare string form (`"type": "int"`) — confirmed to break BigQuery\'s Avro reader when reading a table duckdb-iceberg wrote into BigLake (filed as duckdb/duckdb-iceberg#1245); other strict Avro-consuming engines reading DuckDB-written manifests may be similarly affected but this is unverified',
     ], sourceUrls: [
       'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
       'https://duckdb.org/2026/05/29/new-iceberg-features',
       'https://duckdb.org/docs/current/core_extensions/iceberg/iceberg_rest_catalogs',
-      'https://github.com/duckdb/duckdb-iceberg/issues/1245',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
@@ -380,11 +378,11 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'none', limitations: [
       'DuckDB can create an Iceberg table in BigQuery\'s BigLake REST catalog, and it registers in BigQuery as an EXTERNAL table',
-      'But BigQuery cannot read the data back: its Avro reader fails with a "Cannot resolve" error, because duckdb-iceberg wraps primitive Avro field types in a redundant nested object (e.g. `"type": {"type": "int"}`) instead of the canonical bare string form BigQuery\'s writer and reader use',
-      'Confirmed by diffing the raw manifest Avro schemas written by each engine side by side',
-      'Not fixable via configuration — filed as duckdb/duckdb-iceberg#1245',
-    ], sourceUrls: [
-      'https://github.com/duckdb/duckdb-iceberg/issues/1245',
+      'But BigQuery cannot read the data back: its Avro reader fails with a "Cannot resolve" error',
+      'Root-caused to a BigQuery/BigLake reader-side gap, not a duckdb-iceberg defect: opening DuckDB\'s unmodified manifest with Apache Iceberg\'s own reference Java library (`iceberg-core`, via its real field-id-based ManifestReader) succeeds with zero errors and full field-level correctness, proving the manifest is valid, spec-compliant Iceberg output',
+      'BigQuery\'s reader appears to require Avro naming conventions beyond what the Iceberg spec mandates (e.g. its own writer names nested structs `r<field-id>`, like `r2`; DuckDB\'s independent writer uses human-readable names like `data_file` — both legal, since Iceberg identifies fields by field-id, not by Avro record/field name) — feeding BigQuery\'s own schema into a plain non-Iceberg-aware Avro reader reproduces the same class of failure locally',
+      'An earlier theory (duckdb-iceberg wrapping primitive Avro types in a redundant nested object) was ruled out by direct testing — a manifest with that wrapping removed still failed identically against BigQuery',
+      'Not a duckdb bug — no duckdb-side fix applies; if pursued, this would need to be raised with BigQuery/BigLake, not duckdb-iceberg',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'none', limitations: [] },
