@@ -156,10 +156,15 @@ describe('known facts', () => {
     expect(engineCatalogRules.duckdb.s3tables.support).toBe('partial');
   });
 
-  it('postgres has no support for any catalog', () => {
+  it('postgres has no support for any catalog except pg_lake', () => {
     for (const catalog of CATALOGS) {
+      if (catalog === 'pg_lake') continue;
       expect(engineCatalogRules.postgres[catalog].support).toBe('none');
     }
+  });
+
+  it('postgres has partial pg_lake support', () => {
+    expect(engineCatalogRules.postgres.pg_lake.support).toBe('partial');
   });
 
   it('ducklake is none for engines without a DuckLake client', () => {

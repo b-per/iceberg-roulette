@@ -119,7 +119,8 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
       'Write support added in v1.4.0; INSERT, UPDATE, DELETE, and MERGE INTO all supported',
-      'UPDATE and DELETE only supported on non-partitioned, non-sorted tables; MERGE INTO has no such restriction',
+      'UPDATE and DELETE now work on bucket- and truncate-partitioned tables (since v1.5.3); both remain blocked on tables with a declared sort order in the current stable release (bypassable via `SET unsafe_iceberg_ignore_sort_order=true`) — the fix (duckdb-iceberg#1135) merged upstream but is not yet in a stable DuckDB release (still blocked as of v1.5.5, July 2026); MERGE INTO has no sort-order restriction',
+      'Known bug: DELETE/UPDATE against rows written under a prior partition spec (after an ALTER TABLE ... PARTITIONED BY change) can silently have no effect on read — fixed upstream (duckdb-iceberg#1274) but not yet in a stable release',
       'Merge-on-read semantics only — no copy-on-write',
       'ALTER TABLE schema evolution supported: column add/rename/drop, table rename, format-version upgrades (metadata-only)',
       'Iceberg v3 supported: VARIANT and TIMESTAMP_NS types, binary deletion vectors, row lineage, column defaults',
@@ -129,20 +130,23 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
       'https://duckdb.org/2026/05/29/new-iceberg-features',
       'https://duckdb.org/docs/current/core_extensions/iceberg/iceberg_rest_catalogs',
+      'https://github.com/duckdb/duckdb-iceberg/pull/1135',
+      'https://github.com/duckdb/duckdb-iceberg/issues/1274',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
       'DuckDB accesses S3 Tables via the Iceberg REST catalog endpoint',
-      'Same write constraints as REST: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
+      'Same write constraints as REST: UPDATE/DELETE now work on bucket-/truncate-partitioned tables but remain blocked on sorted tables in the current stable release (fix merged upstream, not yet shipped); MERGE INTO has no sort-order restriction',
     ]},
     unity:    { support: 'partial', limitations: [
       'Iceberg REST write bugs (#792 credential scope, #799 Avro encoding) fixed in DuckDB 1.5.4 (June 2026)',
-      'Iceberg REST writes via Unity Catalog: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
+      'Iceberg REST writes via Unity Catalog: UPDATE/DELETE now work on bucket-/truncate-partitioned tables but remain blocked on sorted tables in the current stable release (fix merged upstream, not yet shipped); MERGE INTO has no sort-order restriction',
       'uc_catalog / Delta pathway (GA in v1.5): INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
       'https://github.com/duckdb/duckdb-iceberg/issues/792',
       'https://github.com/duckdb/duckdb-iceberg/issues/799',
+      'https://github.com/duckdb/duckdb-iceberg/pull/1135',
     ]},
     ducklake: { support: 'partial', limitations: [
       'Requires the ducklake extension: INSTALL ducklake; LOAD ducklake;',
@@ -220,7 +224,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Requires the pg_lake extension (Snowflake Labs, open-sourced Nov 2025)',
       'Uses a JDBC-based SQL catalog — Iceberg metadata stored in PostgreSQL, data files in S3-compatible object storage',
       'External engines cannot write to pg_lake-managed Iceberg tables — PostgreSQL is the sole writer',
-      'Maturing rapidly — weekly releases since open-source launch (v3.3.x as of May 2026 adds production-hardening, PG18 support, isolation testing); verify stability for your use case',
+      'Maturing rapidly — weekly releases since open-source launch (v3.4.x as of July 2026 adds a CREATE SERVER multi-catalog REST config, Iceberg write performance improvements, and continued security hardening); verify stability for your use case',
     ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
   },
 };
@@ -322,7 +326,8 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
       'Write support added in v1.4.0; INSERT, UPDATE, DELETE, and MERGE INTO all supported',
-      'UPDATE and DELETE only supported on non-partitioned, non-sorted tables; MERGE INTO has no such restriction',
+      'UPDATE and DELETE now work on bucket- and truncate-partitioned tables (since v1.5.3); both remain blocked on tables with a declared sort order in the current stable release (bypassable via `SET unsafe_iceberg_ignore_sort_order=true`) — the fix (duckdb-iceberg#1135) merged upstream but is not yet in a stable DuckDB release (still blocked as of v1.5.5, July 2026); MERGE INTO has no sort-order restriction',
+      'Known bug: DELETE/UPDATE against rows written under a prior partition spec (after an ALTER TABLE ... PARTITIONED BY change) can silently have no effect on read — fixed upstream (duckdb-iceberg#1274) but not yet in a stable release',
       'Merge-on-read semantics only — no copy-on-write',
       'ALTER TABLE schema evolution supported: column add/rename/drop, table rename, format-version upgrades (metadata-only)',
       'Iceberg v3 supported: VARIANT and TIMESTAMP_NS types, binary deletion vectors, row lineage, column defaults',
@@ -332,20 +337,23 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'https://duckdb.org/2025/11/28/iceberg-writes-in-duckdb',
       'https://duckdb.org/2026/05/29/new-iceberg-features',
       'https://duckdb.org/docs/current/core_extensions/iceberg/iceberg_rest_catalogs',
+      'https://github.com/duckdb/duckdb-iceberg/pull/1135',
+      'https://github.com/duckdb/duckdb-iceberg/issues/1274',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'partial', limitations: [
       'DuckDB accesses S3 Tables via the Iceberg REST catalog endpoint',
-      'Same write constraints as REST: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
+      'Same write constraints as REST: UPDATE/DELETE now work on bucket-/truncate-partitioned tables but remain blocked on sorted tables in the current stable release (fix merged upstream, not yet shipped); MERGE INTO has no sort-order restriction',
     ]},
     unity:    { support: 'partial', limitations: [
       'Iceberg REST write bugs (#792 credential scope, #799 Avro encoding) fixed in DuckDB 1.5.4 (June 2026)',
-      'Iceberg REST writes via Unity Catalog: MERGE INTO fully supported; UPDATE and DELETE require non-partitioned, non-sorted tables',
+      'Iceberg REST writes via Unity Catalog: UPDATE/DELETE now work on bucket-/truncate-partitioned tables but remain blocked on sorted tables in the current stable release (fix merged upstream, not yet shipped); MERGE INTO has no sort-order restriction',
       'uc_catalog / Delta pathway (GA in v1.5): INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
       'https://github.com/duckdb/duckdb-iceberg/issues/792',
       'https://github.com/duckdb/duckdb-iceberg/issues/799',
+      'https://github.com/duckdb/duckdb-iceberg/pull/1135',
     ]},
     ducklake: { support: 'partial', limitations: [
       'Requires the ducklake extension: INSTALL ducklake; LOAD ducklake;',
