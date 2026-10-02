@@ -16,7 +16,7 @@ Pick a write engine and a read engine (or spin the roulette wheels). The app sho
 
 ## Engines covered
 
-`snowflake` · `bigquery` · `databricks` · `duckdb` · `redshift` · `trino` · `athena` · `postgres`
+`snowflake` · `bigquery` · `databricks` · `duckdb` · `redshift` · `trino` · `athena` · `postgres` · `cloudflare`
 
 ## Catalogs covered
 
@@ -28,8 +28,9 @@ Pick a write engine and a read engine (or spin the roulette wheels). The app sho
 | AWS S3 Tables | Managed Iceberg REST catalog, GA since Nov 2024 |
 | Unity Catalog | Databricks Unity Catalog Iceberg REST |
 | DuckLake | DuckDB-native catalog backed by a DuckDB file |
+| Cloudflare Basin Catalog | Cloudflare's managed Iceberg REST catalog on R2 (formerly R2 Data Catalog); queried by Cloudflare's read-only Basin SQL engine (formerly R2 SQL) |
 
-> Data last verified against official documentation in May 2026. Verify against official docs before going to prod.
+> Data last verified against official documentation in October 2026. Verify against official docs before going to prod.
 
 ## Local development
 

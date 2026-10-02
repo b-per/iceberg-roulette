@@ -1,11 +1,11 @@
 export const ENGINES = [
   'snowflake', 'bigquery', 'databricks', 'duckdb',
-  'redshift', 'trino', 'athena', 'postgres',
+  'redshift', 'trino', 'athena', 'postgres', 'cloudflare',
 ] as const;
 export type EngineId = typeof ENGINES[number];
 
 export const CATALOGS = [
-  'glue', 'rest', 'hive', 's3tables', 'unity', 'ducklake', 'pg_lake', 'vendor_bridge',
+  'glue', 'rest', 'hive', 's3tables', 'unity', 'ducklake', 'pg_lake', 'cloudflare', 'vendor_bridge',
 ] as const;
 export type CatalogId = typeof CATALOGS[number];
 
@@ -18,6 +18,7 @@ export const ENGINE_LABELS: Record<EngineId, string> = {
   trino: 'Trino',
   athena: 'Athena',
   postgres: 'PostgreSQL',
+  cloudflare: 'Cloudflare (Basin SQL)',
 };
 
 export const CATALOG_LABELS: Record<CatalogId, string> = {
@@ -29,6 +30,7 @@ export const CATALOG_LABELS: Record<CatalogId, string> = {
   ducklake:      'DuckLake',
   vendor_bridge: 'Native Vendor Bridge',
   pg_lake:       'pg_lake (PostgreSQL)',
+  cloudflare:    'Cloudflare Basin Catalog (R2 Data Catalog)',
 };
 
 export type Support = 'full' | 'partial' | 'none';
@@ -64,6 +66,9 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     ]},
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'full', limitations: [] },
+    cloudflare: { support: 'none', limitations: [
+      'Cloudflare documents only a read-only Snowflake catalog integration (`ALLOW_WRITES = FALSE` on the external volume) — writing to R2 Data Catalog from Snowflake is not a documented workflow',
+    ], sourceUrls: ['https://developers.cloudflare.com/basin-catalog/config-examples/snowflake/'] },
     pg_lake:  { support: 'none', limitations: [] },
   },
   bigquery: {
@@ -88,6 +93,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'none', limitations: [] },
+    cloudflare: { support: 'none', limitations: [] },
     pg_lake:  { support: 'none', limitations: [] },
   },
   databricks: {
@@ -113,14 +119,15 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'https://motherduck.com/blog/announcing-ducklake-1-0-on-motherduck/',
     ]},
     vendor_bridge: { support: 'none', limitations: [] },
+    cloudflare: { support: 'none', limitations: [] },
     pg_lake:  { support: 'none', limitations: [] },
   },
   duckdb: {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
       'Write support added in v1.4.0; INSERT, UPDATE, DELETE, and MERGE INTO all supported',
-      'UPDATE and DELETE now work on bucket- and truncate-partitioned tables (since v1.5.3); both remain blocked on tables with a declared sort order in the current stable release (bypassable via `SET unsafe_iceberg_ignore_sort_order=true`) — the fix (duckdb-iceberg#1135) merged upstream but is not yet in a stable DuckDB release (still blocked as of v1.5.5, July 2026); MERGE INTO has no sort-order restriction',
-      'Known bug: DELETE/UPDATE against rows written under a prior partition spec (after an ALTER TABLE ... PARTITIONED BY change) can silently have no effect on read — fixed upstream (duckdb-iceberg#1274) but not yet in a stable release',
+      'UPDATE and DELETE now work on bucket- and truncate-partitioned tables (since v1.5.3); both remain blocked on tables with a declared sort order in the current stable release (bypassable via `SET unsafe_iceberg_ignore_sort_order=true`) — the fix (duckdb-iceberg#1135) merged upstream but is not yet in a stable DuckDB release (still blocked as of v1.5.6, September 2026 — v1.5.6 bundles the v1.5 extension branch, which has no backport of it); MERGE INTO has no sort-order restriction',
+      'Known bug: DELETE/UPDATE against rows written under a prior partition spec (after an ALTER TABLE ... PARTITIONED BY change) can silently have no effect on read — fixed on duckdb-iceberg main (#1274, via #1276, August 2026) but not backported to the v1.5 line, so not in a stable release as of v1.5.6',
       'Merge-on-read semantics only — no copy-on-write',
       'ALTER TABLE schema evolution supported: column add/rename/drop, table rename, format-version upgrades (metadata-only)',
       'Iceberg v3 supported: VARIANT and TIMESTAMP_NS types, binary deletion vectors, row lineage, column defaults',
@@ -156,6 +163,11 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'https://duckdb.org/2026/05/12/quack-remote-protocol',
     ]},
     vendor_bridge: { support: 'none', limitations: [] },
+    cloudflare: { support: 'partial', limitations: [
+      'Cloudflare documents DuckDB creating, populating, and querying Iceberg tables in R2 Data Catalog via ATTACH (TYPE ICEBERG) with an ICEBERG secret holding an R2 API token that has both R2 and catalog permissions',
+      'Requires DuckDB 1.4.0+ with the `iceberg` and `httpfs` extensions loaded',
+      'Cloudflare\'s guide states DuckDB does not support DELETE on partitioned tables; current DuckDB does support UPDATE/DELETE on bucket-/truncate-partitioned tables (see the REST entry), so that note may be out of date — not verified against R2 Data Catalog',
+    ], sourceUrls: ['https://developers.cloudflare.com/basin-catalog/config-examples/duckdb/'] },
     pg_lake:  { support: 'none', limitations: [] },
   },
   redshift: {
@@ -172,6 +184,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'none', limitations: [] },
+    cloudflare: { support: 'none', limitations: [] },
     pg_lake:  { support: 'none', limitations: [] },
   },
   trino: {
@@ -192,6 +205,10 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'https://ducklake.select/',
     ]},
     vendor_bridge: { support: 'none', limitations: [] },
+    cloudflare: { support: 'full', limitations: [
+      'Uses the Iceberg REST catalog connector with OAuth2 security (`iceberg.rest-catalog.oauth2.token` set to an R2 API token) plus R2 access key and secret for object storage',
+      'Cloudflare\'s Trino guide does not state read/write scope; write support follows the standard Trino Iceberg REST connector',
+    ], sourceUrls: ['https://developers.cloudflare.com/basin-catalog/config-examples/trino/'] },
     pg_lake:  { support: 'none', limitations: [] },
   },
   athena: {
@@ -210,6 +227,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'none', limitations: [] },
+    cloudflare: { support: 'none', limitations: [] },
     pg_lake:  { support: 'none', limitations: [] },
   },
   postgres: {
@@ -220,12 +238,26 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'none', limitations: [] },
+    cloudflare: { support: 'none', limitations: [] },
     pg_lake:  { support: 'partial', limitations: [
       'Requires the pg_lake extension (Snowflake Labs, open-sourced Nov 2025)',
       'Uses a JDBC-based SQL catalog — Iceberg metadata stored in PostgreSQL, data files in S3-compatible object storage',
       'External engines cannot write to pg_lake-managed Iceberg tables — PostgreSQL is the sole writer',
-      'Maturing rapidly — weekly releases since open-source launch (v3.4.x as of July 2026 adds a CREATE SERVER multi-catalog REST config, Iceberg write performance improvements, and continued security hardening); verify stability for your use case',
+      'Maturing rapidly — frequent releases since open-source launch (v3.5.3 as of September 2026; v3.5 adds Iceberg column type changes plus memory-leak, crash, and write-path hardening fixes); verify stability for your use case',
     ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
+  },
+  cloudflare: {
+    glue:     { support: 'none', limitations: [] },
+    rest:     { support: 'none', limitations: [] },
+    hive:     { support: 'none', limitations: [] },
+    s3tables: { support: 'none', limitations: [] },
+    unity:    { support: 'none', limitations: [] },
+    ducklake: { support: 'none', limitations: [] },
+    vendor_bridge: { support: 'none', limitations: [] },
+    pg_lake:  { support: 'none', limitations: [] },
+    cloudflare: { support: 'none', limitations: [
+      'Cloudflare\'s query engine (R2 SQL, documented as Basin SQL) is read-only — no INSERT, UPDATE, DELETE, CREATE, DROP, or ALTER',
+    ], sourceUrls: ['https://developers.cloudflare.com/basin-sql/reference/limitations-best-practices/'] },
   },
 };
 
@@ -239,6 +271,9 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'Requires the Snowflake Catalog-Linked Database (CLD) feature configured for the Glue catalog',
       'Quoting and case sensitivity can be inconsistent between Snowflake and Iceberg',
     ] },
+    cloudflare: { support: 'full', limitations: [
+      'Read-only catalog integration: REST catalog integration with bearer-token auth (an R2 API token with R2 and catalog permissions) and an external volume pointing at the R2 bucket\'s S3-compatible endpoint',
+    ], sourceUrls: ['https://developers.cloudflare.com/basin-catalog/config-examples/snowflake/'] },
   },
   bigquery: {
     unity: { support: 'partial', limitations: [
@@ -318,6 +353,20 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'Iceberg tables are accessed via the REST catalog extension',
       'Delta tables can also be read via the uc_catalog pathway',
     ] },
+    cloudflare: { support: 'full', limitations: [
+      'Requires DuckDB 1.4.0+ with the `iceberg` and `httpfs` extensions, and an ICEBERG secret holding an R2 API token',
+    ], sourceUrls: ['https://developers.cloudflare.com/basin-catalog/config-examples/duckdb/'] },
+  },
+  cloudflare: {
+    cloudflare: { support: 'partial', limitations: [
+      'Queries Iceberg tables managed by Cloudflare\'s own catalog (R2 Data Catalog) only — it cannot attach to other Iceberg catalogs',
+      'Read-only query engine; Parquet data files only',
+      'Cloudflare\'s docs do not state which Iceberg format versions, delete-file types (positional/equality), or partition transforms are supported',
+      'SQL gaps: no OFFSET, UNNEST/PIVOT/UNPIVOT, LATERAL, or named WINDOW clauses; JOINs, subqueries, CTEs, and window functions are supported (multi-table queries since May 2026)',
+    ], sourceUrls: [
+      'https://developers.cloudflare.com/basin-sql/reference/limitations-best-practices/',
+      'https://developers.cloudflare.com/changelog/post/2026-05-14-joins-subqueries-multi-table-queries/',
+    ] },
   },
 };
 
@@ -326,8 +375,8 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
       'Write support added in v1.4.0; INSERT, UPDATE, DELETE, and MERGE INTO all supported',
-      'UPDATE and DELETE now work on bucket- and truncate-partitioned tables (since v1.5.3); both remain blocked on tables with a declared sort order in the current stable release (bypassable via `SET unsafe_iceberg_ignore_sort_order=true`) — the fix (duckdb-iceberg#1135) merged upstream but is not yet in a stable DuckDB release (still blocked as of v1.5.5, July 2026); MERGE INTO has no sort-order restriction',
-      'Known bug: DELETE/UPDATE against rows written under a prior partition spec (after an ALTER TABLE ... PARTITIONED BY change) can silently have no effect on read — fixed upstream (duckdb-iceberg#1274) but not yet in a stable release',
+      'UPDATE and DELETE now work on bucket- and truncate-partitioned tables (since v1.5.3); both remain blocked on tables with a declared sort order in the current stable release (bypassable via `SET unsafe_iceberg_ignore_sort_order=true`) — the fix (duckdb-iceberg#1135) merged upstream but is not yet in a stable DuckDB release (still blocked as of v1.5.6, September 2026 — v1.5.6 bundles the v1.5 extension branch, which has no backport of it); MERGE INTO has no sort-order restriction',
+      'Known bug: DELETE/UPDATE against rows written under a prior partition spec (after an ALTER TABLE ... PARTITIONED BY change) can silently have no effect on read — fixed on duckdb-iceberg main (#1274, via #1276, August 2026) but not backported to the v1.5 line, so not in a stable release as of v1.5.6',
       'Merge-on-read semantics only — no copy-on-write',
       'ALTER TABLE schema evolution supported: column add/rename/drop, table rename, format-version upgrades (metadata-only)',
       'Iceberg v3 supported: VARIANT and TIMESTAMP_NS types, binary deletion vectors, row lineage, column defaults',
@@ -364,6 +413,11 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'https://duckdb.org/2026/05/12/quack-remote-protocol',
     ]},
     vendor_bridge: { support: 'none', limitations: [] },
+    cloudflare: { support: 'partial', limitations: [
+      'Cloudflare documents DuckDB creating, populating, and querying Iceberg tables in R2 Data Catalog via ATTACH (TYPE ICEBERG) with an ICEBERG secret holding an R2 API token',
+      'Requires DuckDB 1.4.0+ with the `iceberg` and `httpfs` extensions',
+      'Cloudflare\'s guide states DuckDB does not support DELETE on partitioned tables (possibly out of date — see the REST entry)',
+    ], sourceUrls: ['https://developers.cloudflare.com/basin-catalog/config-examples/duckdb/'] },
     pg_lake:  { support: 'none', limitations: [] },
   },
   'bigquery__duckdb': {
@@ -380,6 +434,7 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'none', limitations: [] },
+    cloudflare: { support: 'none', limitations: [] },
     pg_lake:  { support: 'none', limitations: [] },
   },
   'duckdb__bigquery': {
@@ -397,6 +452,7 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
     vendor_bridge: { support: 'none', limitations: [] },
+    cloudflare: { support: 'none', limitations: [] },
     pg_lake:  { support: 'none', limitations: [] },
   },
 };
