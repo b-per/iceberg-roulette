@@ -17,7 +17,7 @@ export const ENGINE_LABELS: Record<EngineId, string> = {
   redshift: 'Redshift',
   trino: 'Trino',
   athena: 'Athena',
-  postgres: 'PostgreSQL',
+  postgres: 'PostgreSQL / Aurora',
   cloudflare: 'Cloudflare (Basin SQL)',
 };
 
@@ -54,10 +54,15 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     ]},
     rest:     { support: 'full', limitations: [
       'Quoting and case sensitivity can be inconsistent across Snowflake ↔ Iceberg REST integrations',
+      'External engines can read and write Snowflake-managed tables through the Horizon Iceberg REST catalog (GA, Iceberg v2 and v3), but not with CTAS, equality deletes, or on dynamic or shared tables',
+      'Reads Google Lakehouse (BigLake Metastore) REST catalogs through a catalog-linked database (GA)',
+    ], sourceUrls: [
+      'https://docs.snowflake.com/en/user-guide/tables-iceberg-query-using-external-query-engine-snowflake-horizon',
+      'https://docs.snowflake.com/en/release-notes/2026/other/2026-06-02-iceberg-google-biglake-metastore-catalog-integration-ga',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'full', limitations: [
-      'Requires the Snowflake Catalog-Linked Database (CLD) feature configured for the S3 Tables REST endpoint',
+      'Requires the Snowflake Catalog-Linked Database (CLD) feature on the S3 Tables REST endpoint, using SigV4 auth (GA; no Glue integration needed)',
       'Requires appropriate AWS IAM permissions granted to Snowflake',
     ]},
     unity:    { support: 'full', limitations: [
@@ -75,10 +80,9 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     glue:     { support: 'none', limitations: [] },
     rest:     { support: 'partial', limitations: [
       'BigQuery manages Iceberg tables via the Lakehouse runtime catalog (formerly BigLake Metastore) — a GCP-specific managed REST endpoint, not a self-hosted open catalog',
-      'Cross-engine read/write interoperability (Spark, Flink, Trino, Snowflake, Databricks) is in preview as of May 2026 — not yet GA',
       'Credential vending is supported for cross-engine access control',
       'REST catalog tables do not support views over Iceberg, metadata tables (.snapshots, .files), clustering, or table renaming',
-      'Google explicitly warns against writing to REST-catalog-endpoint tables via BigQuery DDL/DML once other Iceberg engines (Spark, Flink, Trino, DuckDB) are writing to them — mixed writers risk incompatible metadata changes',
+      'External engines (Spark, Flink, Trino, DuckDB) can read and write these tables (GA), but BigQuery DML on them is still Preview — and Google warns against BigQuery DDL/DML once other engines are writing, since mixed writers risk incompatible metadata changes',
       'Verified: a BigQuery-native Iceberg table has no valid Iceberg snapshot for external readers until `EXPORT TABLE METADATA FROM dataset.table` is run explicitly — CREATE TABLE AS SELECT and INSERT alone leave `current-snapshot-id: -1`, even though `bq show` reports `biglakeConfiguration` as present',
       'Verified: external REST clients must address BigQuery-native tables via the `bq://projects/<project>/locations/<location>` warehouse form ("BigQuery Federation") — the documented `gs://<bucket>` single-bucket warehouse form is a separate, unrelated catalog registry that does not surface BigQuery-created tables at all',
     ], sourceUrls: [
@@ -146,13 +150,10 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Same write constraints as REST: UPDATE/DELETE now work on bucket-/truncate-partitioned tables but remain blocked on sorted tables in the current stable release (fix merged upstream, not yet shipped); MERGE INTO has no sort-order restriction',
     ]},
     unity:    { support: 'partial', limitations: [
-      'Iceberg REST write bugs (#792 credential scope, #799 Avro encoding) fixed in DuckDB 1.5.4 (June 2026)',
       'Iceberg REST writes via Unity Catalog: UPDATE/DELETE now work on bucket-/truncate-partitioned tables but remain blocked on sorted tables in the current stable release (fix merged upstream, not yet shipped); MERGE INTO has no sort-order restriction',
       'uc_catalog / Delta pathway (GA in v1.5): INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
-      'https://github.com/duckdb/duckdb-iceberg/issues/792',
-      'https://github.com/duckdb/duckdb-iceberg/issues/799',
       'https://github.com/duckdb/duckdb-iceberg/pull/1135',
     ]},
     ducklake: { support: 'partial', limitations: [
@@ -166,20 +167,23 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     cloudflare: { support: 'partial', limitations: [
       'Cloudflare documents DuckDB creating, populating, and querying Iceberg tables in R2 Data Catalog via ATTACH (TYPE ICEBERG) with an ICEBERG secret holding an R2 API token that has both R2 and catalog permissions',
       'Requires DuckDB 1.4.0+ with the `iceberg` and `httpfs` extensions loaded',
-      'Cloudflare\'s guide states DuckDB does not support DELETE on partitioned tables; current DuckDB does support UPDATE/DELETE on bucket-/truncate-partitioned tables (see the REST entry), so that note may be out of date — not verified against R2 Data Catalog',
+      'Cloudflare\'s guide says DuckDB cannot DELETE on partitioned tables; current DuckDB can for bucket-/truncate-partitioned tables (see the REST entry)',
     ], sourceUrls: ['https://developers.cloudflare.com/basin-catalog/config-examples/duckdb/'] },
     pg_lake:  { support: 'none', limitations: [] },
   },
   redshift: {
     glue:     { support: 'full', limitations: [
-      'Requires creating Iceberg tables in Redshift registered in Glue Data Catalog',
-      'Time travel and some schema evolution features are not available via Redshift',
+      'Writes directly through the `awsdatacatalog` mount or an external schema; Iceberg v2 and v3 tables, including DML and ALTER TABLE (not on complex-type columns)',
+      'Time travel queries are not supported',
+    ], sourceUrls: [
+      'https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-redshift-alter-table-iceberg/',
+      'https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-redshift-supports-apache-iceberg-v3/',
     ]},
     rest:     { support: 'none', limitations: [] },
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'full', limitations: [
-      'Requires creating Iceberg tables in Redshift registered against S3 Tables',
-      'Time travel and some schema evolution features are not available via Redshift',
+      'Writes directly through the S3 Tables catalog or an external schema; Iceberg v2 and v3 tables, including DML and ALTER TABLE (not on complex-type columns)',
+      'Time travel queries are not supported',
     ]},
     unity:    { support: 'none', limitations: [] },
     ducklake: { support: 'none', limitations: [] },
@@ -194,10 +198,10 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     s3tables: { support: 'full', limitations: [
       'Requires configuring the S3 Tables REST catalog endpoint and AWS credentials in Trino',
     ]},
-    unity:    { support: 'partial', limitations: [
-      'Trino connects to Unity Catalog via Iceberg REST, but write requires security mode adjustments and is not GA in OSS Trino',
-      'Writes via Unity Catalog Iceberg REST create Managed Iceberg tables only — existing Delta tables are read-only via this interface',
-    ]},
+    unity:    { support: 'full', limitations: [
+      'Requires external data access enabled on the Unity Catalog metastore and the `EXTERNAL USE SCHEMA` privilege on the schema',
+      'Writes create Managed Iceberg tables only — existing Delta tables are read-only via the Iceberg REST interface',
+    ], sourceUrls: ['https://docs.databricks.com/aws/en/external-access/iceberg']},
     ducklake: { support: 'partial', limitations: [
       'Requires a DuckLake Trino connector',
       'DuckDB-backed catalog must be served via Quack for remote access — local DuckDB file not directly accessible',
@@ -213,14 +217,14 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
   },
   athena: {
     glue:     { support: 'full', limitations: [
-      'Requires Athena engine version 3 — v2 has no Iceberg support',
+      'Requires Athena engine version 3; supports Iceberg v2 tables only, so v3 tables cannot be read',
       'VACUUM and OPTIMIZE operations must be run manually for query performance',
       'Time travel queries use Athena-specific syntax (FOR TIMESTAMP AS OF / FOR VERSION AS OF)',
     ]},
     rest:     { support: 'none', limitations: [] },
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'full', limitations: [
-      'Requires Athena engine version 3',
+      'Requires Athena engine version 3; supports Iceberg v2 tables only, so v3 tables cannot be read',
       'S3 Tables bucket and table bucket must be in the same AWS region as the Athena workgroup',
       'VACUUM and OPTIMIZE should be scheduled for query performance',
     ]},
@@ -243,7 +247,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Requires the pg_lake extension (Snowflake Labs, open-sourced Nov 2025)',
       'Uses a JDBC-based SQL catalog — Iceberg metadata stored in PostgreSQL, data files in S3-compatible object storage',
       'External engines cannot write to pg_lake-managed Iceberg tables — PostgreSQL is the sole writer',
-      'Maturing rapidly — frequent releases since open-source launch (v3.5.3 as of September 2026; v3.5 adds Iceberg column type changes plus memory-leak, crash, and write-path hardening fixes); verify stability for your use case',
+      'Young project (v3.5.x as of September 2026) — verify stability for your use case',
     ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
   },
   cloudflare: {
@@ -260,6 +264,24 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     ], sourceUrls: ['https://developers.cloudflare.com/basin-sql/reference/limitations-best-practices/'] },
   },
 };
+
+const GLUE_FEDERATION_URL = 'https://docs.aws.amazon.com/lake-formation/latest/dg/catalog-federation.html';
+const AURORA_URL = 'https://aws.amazon.com/blogs/aws/amazon-aurora-postgresql-now-supports-direct-querying-of-apache-iceberg-and-parquet-data-in-your-data-lake/';
+
+const FEDERATED_REST_READ = [
+  'Read-only via AWS Glue catalog federation (documented for Snowflake Horizon and Polaris), governed by Lake Formation',
+  'Iceberg tables on S3 only; table metadata over 5 MB is rejected; nested Polaris namespaces are not supported',
+];
+
+const FEDERATED_UNITY_READ = [
+  'Read-only via AWS Glue catalog federation using a Databricks service principal, governed by Lake Formation',
+  'Iceberg tables on S3 only (Delta tables need UniForm Iceberg metadata); table metadata over 5 MB is rejected',
+];
+
+const AURORA_READ = [
+  'Aurora PostgreSQL 17.11+ or 18.6+ only, via the `aurora_analytics` extension and an IAM role with the AuroraAnalytics feature — not available on community PostgreSQL',
+  'Read-only: data is queried in place (materialization copies it into Aurora tables); Iceberg version and delete-file support are not documented',
+];
 
 // Read-side overrides: where an engine's READ catalog capability differs from its WRITE capability.
 // Most engines: same rules both ways. Exceptions captured here.
@@ -293,12 +315,10 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
       'https://www.databricks.com/blog/interoperability-between-unity-catalog-and-google-bigquery-catalog-federation',
       'https://www.databricks.com/blog/unity-catalog-and-next-era-apache-icebergtm',
     ] },
-    // Databricks can READ Glue-registered Iceberg tables via the Glue connector in Spark,
-    // even though it cannot WRITE to the Glue catalog.
     glue: { support: 'partial', limitations: [
-      'Databricks can read Glue-registered Iceberg tables via Spark connector but cannot write to Glue',
-      'Read-only — use Unity Catalog or Hive Metastore for a read/write Databricks catalog',
-    ]},
+      'Read through a Unity Catalog foreign catalog federated to Glue; `storage_root` must be set on the catalog to read Iceberg tables',
+      'Foreign Iceberg tables are read-only in Databricks — use Unity Catalog or Hive Metastore for a read/write Databricks catalog',
+    ], sourceUrls: ['https://docs.databricks.com/aws/en/query-federation/hms-federation-glue']},
     // Databricks can READ from S3 Tables via the Iceberg REST catalog in Spark.
     s3tables: { support: 'partial', limitations: [
       'Databricks can read S3 Tables via the Iceberg REST catalog connector in Spark but cannot write',
@@ -319,22 +339,30 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
     ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
   },
   redshift: {
-    // Write rules say "requires creating tables in Redshift" — for reads the tables just need to be
-    // registered as external schemas; no creation required on the Redshift side.
     glue: { support: 'full', limitations: [
-      'Iceberg tables must be registered in Redshift as an external schema pointing to the Glue Data Catalog',
-      'Time travel and some schema evolution features are not available via Redshift',
+      'Queried through an external schema or the `awsdatacatalog` mount; Iceberg v1–v3 tables readable',
+      'Time travel queries are not supported',
     ] },
     s3tables: { support: 'full', limitations: [
-      'Iceberg tables must be registered in Redshift as an external schema pointing to S3 Tables',
-      'Time travel and some schema evolution features are not available via Redshift',
+      'Queried through an external schema or the S3 Tables catalog; Iceberg v1–v3 tables readable',
+      'Time travel queries are not supported',
     ] },
+    rest: { support: 'partial', limitations: FEDERATED_REST_READ, sourceUrls: [GLUE_FEDERATION_URL] },
+    unity: { support: 'partial', limitations: FEDERATED_UNITY_READ, sourceUrls: [GLUE_FEDERATION_URL] },
+  },
+  athena: {
+    rest: { support: 'partial', limitations: FEDERATED_REST_READ, sourceUrls: [GLUE_FEDERATION_URL] },
+    unity: { support: 'partial', limitations: FEDERATED_UNITY_READ, sourceUrls: [GLUE_FEDERATION_URL] },
+  },
+  postgres: {
+    glue: { support: 'partial', limitations: AURORA_READ, sourceUrls: [AURORA_URL] },
+    s3tables: { support: 'partial', limitations: AURORA_READ, sourceUrls: [AURORA_URL] },
+    rest: { support: 'partial', limitations: [
+      ...AURORA_READ,
+      'Remote REST catalogs are reached through Glue catalog federation',
+    ], sourceUrls: [AURORA_URL] },
   },
   trino: {
-    // Write rules include a Unity write-specific caveat; Trino reads Unity via Iceberg REST cleanly.
-    unity: { support: 'full', limitations: [
-      'Existing Delta tables in Unity Catalog are accessible as read-only Iceberg tables via the REST interface',
-    ] },
     pg_lake: { support: 'partial', limitations: [
       'Trino can read pg_lake-managed Iceberg tables via the JDBC Iceberg catalog connector',
       'Requires configuring the pg_lake JDBC catalog in Trino',
@@ -395,13 +423,10 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
       'Same write constraints as REST: UPDATE/DELETE now work on bucket-/truncate-partitioned tables but remain blocked on sorted tables in the current stable release (fix merged upstream, not yet shipped); MERGE INTO has no sort-order restriction',
     ]},
     unity:    { support: 'partial', limitations: [
-      'Iceberg REST write bugs (#792 credential scope, #799 Avro encoding) fixed in DuckDB 1.5.4 (June 2026)',
       'Iceberg REST writes via Unity Catalog: UPDATE/DELETE now work on bucket-/truncate-partitioned tables but remain blocked on sorted tables in the current stable release (fix merged upstream, not yet shipped); MERGE INTO has no sort-order restriction',
       'uc_catalog / Delta pathway (GA in v1.5): INSERT supported via Catalog Commits; UPDATE and DELETE not yet supported',
     ], sourceUrls: [
       'https://duckdb.org/2026/05/07/delta-uc-updates',
-      'https://github.com/duckdb/duckdb-iceberg/issues/792',
-      'https://github.com/duckdb/duckdb-iceberg/issues/799',
       'https://github.com/duckdb/duckdb-iceberg/pull/1135',
     ]},
     ducklake: { support: 'partial', limitations: [
@@ -416,7 +441,7 @@ export const pairOverrides: Partial<Record<PairKey, EngineRule>> = {
     cloudflare: { support: 'partial', limitations: [
       'Cloudflare documents DuckDB creating, populating, and querying Iceberg tables in R2 Data Catalog via ATTACH (TYPE ICEBERG) with an ICEBERG secret holding an R2 API token',
       'Requires DuckDB 1.4.0+ with the `iceberg` and `httpfs` extensions',
-      'Cloudflare\'s guide states DuckDB does not support DELETE on partitioned tables (possibly out of date — see the REST entry)',
+      'Cloudflare\'s guide says DuckDB cannot DELETE on partitioned tables; current DuckDB can for bucket-/truncate-partitioned tables (see the REST entry)',
     ], sourceUrls: ['https://developers.cloudflare.com/basin-catalog/config-examples/duckdb/'] },
     pg_lake:  { support: 'none', limitations: [] },
   },

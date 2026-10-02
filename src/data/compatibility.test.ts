@@ -144,8 +144,8 @@ describe('known facts', () => {
     }
   });
 
-  it('trino has partial unity support (write not GA in OSS Trino)', () => {
-    expect(engineCatalogRules.trino.unity.support).toBe('partial');
+  it('trino has full unity support (listed by Databricks as a GA external write client)', () => {
+    expect(engineCatalogRules.trino.unity.support).toBe('full');
   });
 
   it('snowflake has full s3tables support via CLD', () => {
