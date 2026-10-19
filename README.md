@@ -4,6 +4,8 @@
 
 🔗 **Live site:** https://b-per.github.io/iceberg-roulette/
 
+📊 **Looking for per-engine feature support (V2/V3, catalogs, ingestion tools)?** See the [Iceberg Compatibility Matrix](https://icebergmatrix.org/).
+
 ---
 
 ## What it does

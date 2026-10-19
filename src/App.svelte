@@ -63,6 +63,13 @@
     >{theme === 'dark' ? '☀' : '☾'}</button>
   </header>
 
+  <aside class="banner">
+    Need per-engine feature support, catalogs included?
+    <a href="https://icebergmatrix.org/" target="_blank" rel="noopener noreferrer">
+      Iceberg Compatibility Matrix →
+    </a>
+  </aside>
+
   <main class:matrix-view={view === 'matrix'}>
     {#if view === 'roulette'}
       <section class="wheels">
@@ -161,6 +168,23 @@
   .theme-btn:hover { border-color: var(--gold); color: var(--gold); }
 
   .nav-sep { color: var(--border-lg); font-size: 11px; }
+
+  .banner {
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--text-3);
+    text-align: center;
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .banner a {
+    color: var(--gold);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .banner a:hover { text-decoration: underline; }
 
   main {
     display: flex;
