@@ -56,9 +56,13 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Quoting and case sensitivity can be inconsistent across Snowflake ↔ Iceberg REST integrations',
       'External engines can read and write Snowflake-managed tables through the Horizon Iceberg REST catalog (GA, Iceberg v2 and v3), but not with CTAS, equality deletes, or on dynamic or shared tables',
       'Reads Google Lakehouse (BigLake Metastore) REST catalogs through a catalog-linked database (GA)',
+      'Catalog-linked databases can create and write tables in nested namespaces (since September 2026), only when the remote catalog supports nested namespaces',
+      'Externally managed REST tables (including those in catalog-linked databases) can be upgraded in place to Iceberg v3 (GA, October 2026); tables using a native Glue or object-storage catalog source cannot',
     ], sourceUrls: [
       'https://docs.snowflake.com/en/user-guide/tables-iceberg-query-using-external-query-engine-snowflake-horizon',
       'https://docs.snowflake.com/en/release-notes/2026/other/2026-06-02-iceberg-google-biglake-metastore-catalog-integration-ga',
+      'https://docs.snowflake.com/release-notes/2026/other/2026-09-14-cld-nested-namespace-write-support-open-catalog',
+      'https://docs.snowflake.com/en/release-notes/2026/other/2026-10-16-iceberg-v3-upgrade-expression-defaults-ga',
     ]},
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'full', limitations: [
@@ -247,7 +251,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Requires the pg_lake extension (Snowflake Labs, open-sourced Nov 2025)',
       'Uses a JDBC-based SQL catalog — Iceberg metadata stored in PostgreSQL, data files in S3-compatible object storage',
       'External engines cannot write to pg_lake-managed Iceberg tables — PostgreSQL is the sole writer',
-      'Young project (v3.5.x as of September 2026) — verify stability for your use case',
+      'Young project (v3.5.x as of October 2026) — verify stability for your use case',
     ], sourceUrls: ['https://github.com/Snowflake-Labs/pg_lake'] },
   },
   cloudflare: {
@@ -388,7 +392,7 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
   cloudflare: {
     cloudflare: { support: 'partial', limitations: [
       'Queries Iceberg tables managed by Cloudflare\'s own catalog (R2 Data Catalog) only — it cannot attach to other Iceberg catalogs',
-      'Read-only query engine; Parquet data files only',
+      'Read-only query engine (Basin GA since October 1, 2026); Parquet data files only',
       'Cloudflare\'s docs do not state which Iceberg format versions, delete-file types (positional/equality), or partition transforms are supported',
       'SQL gaps: no OFFSET, UNNEST/PIVOT/UNPIVOT, LATERAL, or named WINDOW clauses; JOINs, subqueries, CTEs, and window functions are supported (multi-table queries since May 2026)',
     ], sourceUrls: [
