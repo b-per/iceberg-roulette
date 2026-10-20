@@ -56,11 +56,13 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
       'Quoting and case sensitivity can be inconsistent across Snowflake ↔ Iceberg REST integrations',
       'External engines can read and write Snowflake-managed tables through the Horizon Iceberg REST catalog (GA, Iceberg v2 and v3), but not with CTAS, equality deletes, or on dynamic or shared tables',
       'Reads Google Lakehouse (BigLake Metastore) REST catalogs through a catalog-linked database (GA)',
+      'Preview (August 2026): external engines such as Spark, Trino, DuckDB and PyIceberg can also reach externally managed tables in a catalog-linked database through the same Horizon Iceberg REST endpoint, with Snowflake RBAC enforced (read/write scope not stated in the release note)',
       'Catalog-linked databases can create and write tables in nested namespaces (since September 2026), only when the remote catalog supports nested namespaces',
       'Externally managed REST tables (including those in catalog-linked databases) can be upgraded in place to Iceberg v3 (GA, October 2026); tables using a native Glue or object-storage catalog source cannot',
     ], sourceUrls: [
       'https://docs.snowflake.com/en/user-guide/tables-iceberg-query-using-external-query-engine-snowflake-horizon',
       'https://docs.snowflake.com/en/release-notes/2026/other/2026-06-02-iceberg-google-biglake-metastore-catalog-integration-ga',
+      'https://docs.snowflake.com/release-notes/2026/other/2026-08-18-externally-managed-iceberg-tables-horizon-irc-preview',
       'https://docs.snowflake.com/release-notes/2026/other/2026-09-14-cld-nested-namespace-write-support-open-catalog',
       'https://docs.snowflake.com/en/release-notes/2026/other/2026-10-16-iceberg-v3-upgrade-expression-defaults-ga',
     ]},
@@ -177,7 +179,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
   },
   redshift: {
     glue:     { support: 'full', limitations: [
-      'Writes directly through the `awsdatacatalog` mount or an external schema; Iceberg v2 and v3 tables, including DML and ALTER TABLE (not on complex-type columns)',
+      'Writes directly through the `awsdatacatalog` mount or an external schema; Iceberg v2 and v3 tables, including DML and ALTER TABLE (not on complex-type columns); v3 Variant, Geography and Geometry types are not yet supported (patch 204)',
       'Time travel queries are not supported',
     ], sourceUrls: [
       'https://aws.amazon.com/about-aws/whats-new/2026/05/amazon-redshift-alter-table-iceberg/',
@@ -186,7 +188,7 @@ export const engineCatalogRules: Record<EngineId, EngineRule> = {
     rest:     { support: 'none', limitations: [] },
     hive:     { support: 'none', limitations: [] },
     s3tables: { support: 'full', limitations: [
-      'Writes directly through the S3 Tables catalog or an external schema; Iceberg v2 and v3 tables, including DML and ALTER TABLE (not on complex-type columns)',
+      'Writes directly through the S3 Tables catalog or an external schema; Iceberg v2 and v3 tables, including DML and ALTER TABLE (not on complex-type columns); v3 Variant, Geography and Geometry types are not yet supported (patch 204)',
       'Time travel queries are not supported',
     ]},
     unity:    { support: 'none', limitations: [] },
@@ -344,11 +346,11 @@ export const engineReadRules: Partial<Record<EngineId, Partial<EngineRule>>> = {
   },
   redshift: {
     glue: { support: 'full', limitations: [
-      'Queried through an external schema or the `awsdatacatalog` mount; Iceberg v1–v3 tables readable',
+      'Queried through an external schema or the `awsdatacatalog` mount; Iceberg v1–v3 tables readable; v3 Variant, Geography and Geometry types are not yet supported (patch 204)',
       'Time travel queries are not supported',
     ] },
     s3tables: { support: 'full', limitations: [
-      'Queried through an external schema or the S3 Tables catalog; Iceberg v1–v3 tables readable',
+      'Queried through an external schema or the S3 Tables catalog; Iceberg v1–v3 tables readable; v3 Variant, Geography and Geometry types are not yet supported (patch 204)',
       'Time travel queries are not supported',
     ] },
     rest: { support: 'partial', limitations: FEDERATED_REST_READ, sourceUrls: [GLUE_FEDERATION_URL] },
